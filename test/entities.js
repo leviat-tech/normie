@@ -1,7 +1,7 @@
 import Entity from '../src/entity';
 
 export class Zone extends Entity {
-  static id = 'sections';
+  static id = 'zones';
 
   static fields = {
     materialPreferences: {
@@ -34,6 +34,20 @@ export class Segment extends Entity {
   static fields = {
     length: 0,
     zoneId: null,
+    sectionId: null,
     zone: this.belongsTo(Zone, 'zoneId'),
+  }
+}
+
+export class Section extends Entity {
+  static id = 'sections';
+
+  static fields = {
+    description: '',
+    masonry: {
+      material: '',
+      thickness: 0.1,
+    },
+    zones: this.manyToMany(Zone, Segment, 'sectionId', 'zoneId'),
   }
 }

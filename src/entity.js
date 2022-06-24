@@ -1,17 +1,18 @@
-import _ from 'lodash';
 import { reactive } from '@vue/reactivity';
-import { HasOne, HasMany, BelongsTo } from "./relation";
+import fp from 'lodash/fp';
+import HasOne from './relations/has-one';
+import HasMany from './relations/has-many';
+import BelongsTo from './relations/belongs-to';
+import ManyToMany from './relations/many-to-many';
 
 export default class Entity {
 
   constructor(props) {
     this.data = reactive(props);
-
     return new Proxy(this, {
       get(target, prop) {
         const dataById = target.constructor.dataById;
         if (!dataById[target.data.id]) {
-          // make it impossible to get or set from a deleted instance;
           throw `instance with id ${target.data.id} does not exist.`
         }
         if (prop === 'constructor') {
@@ -48,30 +49,56 @@ export default class Entity {
 
   static resetRelations() {
     this.relations = [];
-    this.inverseRelations = [];
+    this.dependentRelations = [];
+  }
+
+  static addBelongsToRelation(relations, relation) {
+    const existingBelongsToEquivalent = relations.find((_relation) => 
+      (_relation instanceof BelongsTo)
+        && _relation.primaryEntity.id == relation.primaryEntity.id
+        && _relation.relatedEntity.id == relation.relatedEntity.id
+        && _relation.foreignKeyField == relation.foreignKeyField
+    )
+    if (!existingBelongsToEquivalent) {
+      relations.push(relation);
+    } else {
+      if (relation.fieldname) {
+        existingBelongsToEquivalent.fieldname = relation.fieldname;
+      }
+      if (relation.deleteCascade) {
+        existingBelongsToEquivalent.deleteCascade = relation.deleteCascade;
+      }
+    }
   }
 
   static addRelation(relation) {
-    this.relations.push(relation);
+    if (relation instanceof BelongsTo) {
+      this.addBelongsToRelation(this.relations, relation);
+    } else {
+      this.relations.push(relation);
+    }
   }
 
-  static addInverseRelation(inverseRelation) {
-    this.inverseRelations.push(inverseRelation);
+  static addDependentRelation(relation) {
+    if (relation instanceof BelongsTo) {
+      this.addBelongsToRelation(this.dependentRelations, relation);
+    }
   }
 
   static get foreignKeyFields() {
-    const foreignKeyFields = [
-      ...this.relations.filter((relation) => relation instanceof BelongsTo),
-      ...this.inverseRelations.filter(
-        (relation) => relation instanceof HasOne || relation instanceof HasMany
-      ),
-    ].map((relation) => relation.foreignKeyField);
-    return _.uniq(foreignKeyFields);
+    // any relations that reference a foreign key on this entity
+    return fp.flow(
+      fp.filter((relation) => relation instanceof BelongsTo),
+      fp.map('foreignKeyField'),
+      fp.uniq(),
+    )(this.relations);
   }
 
   static get relationsByFieldName() {
     return this.relations.reduce(
-      (acc, relation) => ({ ...acc, [relation.fieldname]: relation }),
+      (acc, relation) => relation.fieldname
+        ? { ...acc, [relation.fieldname]: relation }
+        : acc,
       {}
     );
   }
@@ -104,40 +131,9 @@ export default class Entity {
     return this.store.delete(this, id);
   }
 
-  static resetForeignKey(foreignKeyField, foreignKey) {
-    return this.store.resetForeignKey(this, foreignKeyField, foreignKey);
+  static clearForeignKeyIndex(foreignKeyField, foreignKey) {
+    return this.store.clearForeignKeyIndex(this, foreignKeyField, foreignKey);
   }
-
-  // RELATIONSHIP STUFF
-  static hasOne(relatedEntity, foreignKeyField) {
-    return {
-      primaryEntity: this,
-      relatedEntity,
-      foreignKeyField,
-      RelationClass: HasOne,
-    };
-  }
-
-  static belongsTo(relatedEntity, foreignKeyField) {
-    return {
-      primaryEntity: this,
-      relatedEntity,
-      foreignKeyField,
-      RelationClass: BelongsTo,
-    };
-  }
-
-  static hasMany(relatedEntity, foreignKeyField) {
-    return {
-      primaryEntity: this,
-      relatedEntity,
-      foreignKeyField,
-      RelationClass: HasMany,
-    };
-  }
-
-  // static manyToMany(relatedEntity, join, selfForeignKey, relatedForeignKey) {
-  // }
 
   $update(patch) {
     return this.constructor.update(this.id, patch);
@@ -145,6 +141,59 @@ export default class Entity {
 
   $delete() {
     return this.constructor.delete(this.id);
+  }
+
+  $toJSON(string) {
+
+  }
+
+  // RELATION STUFF
+  static belongsTo(relatedEntity, foreignKeyField, opts = {}) {
+    return {
+      primaryEntity: this,
+      relatedEntity,
+      foreignKeyField,
+      deleteCascade: opts.deleteCascade,
+      RelationClass: BelongsTo,
+    };
+  }
+
+  static hasOne(relatedEntity, foreignKeyField, opts = {}) {
+    return {
+      primaryEntity: this,
+      relatedEntity,
+      foreignKeyField,
+      deleteCascade: opts.deleteCascade,
+      RelationClass: HasOne,
+    };
+  }
+
+  static hasMany(relatedEntity, foreignKeyField, opts = {}) {
+    return {
+      primaryEntity: this,
+      relatedEntity,
+      foreignKeyField,
+      deleteCascade: opts.deleteCascade,
+      RelationClass: HasMany,
+    };
+  }
+
+  static manyToMany(
+    relatedEntity,
+    pivotEntity,
+    primaryForeignKeyField,
+    relatedForeignKeyField,
+    opts = {},
+   ) {
+    return {
+      primaryEntity: this,
+      relatedEntity,
+      pivotEntity,
+      primaryForeignKeyField,
+      relatedForeignKeyField,
+      deletePivot: opts.deletePivot, // remove the pivot instance if primary or related entity are deleted;
+      RelationClass: ManyToMany,
+    }
   }
 
 }
