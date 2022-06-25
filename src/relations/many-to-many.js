@@ -19,13 +19,13 @@ export default class ManyToMany extends Relation {
         primaryEntity: this.pivotEntity,
         relatedEntity: this.primaryEntity,
         foreignKeyField: this.primaryForeignKeyField,
-        deleteCascade: this.deletePivot,
+        deleteCascade: this.deleteCascadePivot,
       }),
       new BelongsTo({
         primaryEntity: this.pivotEntity,
         relatedEntity: this.relatedEntity,
         foreignKeyField: this.relatedForeignKeyField,
-        deleteCascade: this.deletePivot,
+        deleteCascade: this.deleteCascadePivot,
       }),
     ];
   }

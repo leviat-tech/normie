@@ -35,6 +35,7 @@ export class Segment extends Entity {
     length: 0,
     zoneId: null,
     sectionId: null,
+    section: this.belongsTo('sections', 'sectionId'),
     zone: this.belongsTo(Zone, 'zoneId'),
   }
 }

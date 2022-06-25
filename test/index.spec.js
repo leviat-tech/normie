@@ -7,11 +7,15 @@ import normie from '../src/normie';
 describe('Entities Store', () => {
   let zone;
   let assembly;
+  let segment;
+  let section;
 
   beforeEach(() => {
     setActivePinia(createPinia());
     normie(defineStore, [Zone, Assembly, Segment, Section]);
     zone = Zone.create();
+    segment = Segment.create();
+    section = Section.create();
     assembly = Assembly.create({ profile: { radius: 0.01 }});
   })
 
@@ -60,6 +64,13 @@ describe('Entities Store', () => {
 
   it("prevents changing an instance's id", () => {
     expect(() => assembly.id = 'oh no').toThrowError();
+  })
+
+  it("correctly serializes to JSON", () => {
+    assembly.zone = zone;
+    zone.segment = segment;
+    segment.section = section;
+    console.log(segment.$toJSON('*'));
   })
 
 });

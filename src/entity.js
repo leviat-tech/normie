@@ -18,6 +18,9 @@ export default class Entity {
         if (prop === 'constructor') {
           return Reflect.get(...arguments);
         }
+        if (prop === '_data') {
+          return target.data;
+        }
         const relation = target.constructor.relationsByFieldName[prop];
         if (relation?.get) {
           return relation.get(target.data);
@@ -28,16 +31,20 @@ export default class Entity {
         return Reflect.get(...arguments);
       },
       set(target, prop, value) {
-        const dataById = target.constructor.dataById;
+        const parent = target.constructor;
+        const dataById = parent.dataById;
         if (!dataById[target.data.id]) {
           throw `instance with id ${target.data.id} does not exist.`
         }
-        const relation = target.constructor.relationsByFieldName[prop];
+        const relation = parent.relationsByFieldName[prop];
         if (relation) {
           relation.set(target.data, value);
           return true;
         }
-        target.constructor.update(target.data.id, { [prop]: value });
+        if (!parent.fields[prop] === undefined) {
+          console.warn(`warning: property ${prop} not defined in ${parent.id} fields`);
+        }
+        parent.update(target.data.id, { [prop]: value });
         return true;
       },
     });
@@ -143,8 +150,47 @@ export default class Entity {
     return this.constructor.delete(this.id);
   }
 
-  $toJSON(string) {
+  $toJSON(path = '*') {
+    const serialize = (instance, path) => {
+      const relationsByFieldName = instance.constructor.relationsByFieldName;
+      const addRelationToJSON = (json, path) => {
+        const periodIndex = path.indexOf('.');
+        let childFieldName;
+        let remainingPath;
+  
+        if (periodIndex === -1) {
+          childFieldName = path;
+          remainingPath = null;
+        } else {
+          childFieldName = path.slice(0, periodIndex);
+          remainingPath = path.slice(periodIndex + 1);
+        }
 
+        if (!relationsByFieldName[childFieldName]) {
+          throw `relation ${childFieldName} does not exist on ${instance.constructor.id}`;
+        }
+  
+        const child = instance[childFieldName];
+        const childJSON = Array.isArray(child)
+          ? child.map((_child) => serialize(_child, remainingPath))
+          : serialize(child, remainingPath);
+  
+        return { ...json, [childFieldName]: childJSON };
+      }
+
+      const serialized = instance?._data;
+      if (!path || !serialized) return serialized;
+      if (path.startsWith('[')) {
+        return path.slice(1, -1).split(',')
+          .map((str) => str.replaceAll(' ', ''))
+          .reduce(addRelationToJSON, serialized)
+      }
+      if (path === '*') {
+        return Object.keys(relationsByFieldName).reduce(addRelationToJSON, serialized)
+      }
+      return addRelationToJSON(serialized, path);
+    }
+    return serialize(this, path);
   }
 
   // RELATION STUFF
@@ -191,7 +237,7 @@ export default class Entity {
       pivotEntity,
       primaryForeignKeyField,
       relatedForeignKeyField,
-      deletePivot: opts.deletePivot, // remove the pivot instance if primary or related entity are deleted;
+      deleteCascadePivot: opts.deleteCascadePivot,
       RelationClass: ManyToMany,
     }
   }
