@@ -1,48 +1,59 @@
-import _ from "lodash";
-import Relation from "./relation";
-import BelongsTo from "./belongs-to";
-
+import _ from 'lodash'
+import Relation from './relation'
+import BelongsTo from './belongs-to'
 
 export default class HasOne extends Relation {
-  get(instance) {
-    const id =
-      this.relatedEntity.idsByForeignKey[this.foreignKeyField]?.[instance.id]?.[0];
-    if (!id) return; 
-    const data = this.relatedEntity.dataById[id];
-    return new this.relatedEntity(data);
+  get foreignKey () {
+    return this.RelatedEntity.foreignKeysByFieldName[this.foreignKeyField]
   }
-  onCreateWithRelated(data, related) {
+
+  get (instance) {
+    const id = this.RelatedEntity.idsByForeignKey[this.foreignKeyField]?.[instance.id]?.[0]
+    if (!id) return null
+    const data = this.RelatedEntity.dataById[id]
+    return new this.RelatedEntity(data)
+  }
+
+  onCreateWithRelated (data, related) {
     const foreignKey = related[this.foreignKeyField]
     if (foreignKey) {
-      throw `relation's ${this.foreignKeyField} must be empty; is set to ${foreignKey}`;
+      throw new Error(`relation's ${this.foreignKeyField} must be empty; is set to ${foreignKey}`)
     }
     if (!_.isPlainObject(related)) {
-      throw `hasOne relation "${this.fieldname}" must be an object`;
+      throw new Error(`hasOne relation "${this.fieldname}" must be an object`)
     }
-    this.relatedEntity.create({ ...related, [this.foreignKeyField]: data.id });
+    this.RelatedEntity.create({ ...related, [this.foreignKeyField]: data.id })
   }
-  set(instance, value) {
-    if (!(value instanceof this.relatedEntity) && value !== null) {
-      throw `must set ${this.fieldname} to instance of ${this.relatedEntity.id}`;
+
+  set (instance, value) {
+    if (!(value instanceof this.RelatedEntity) && value !== null) {
+      throw new Error(`must set ${this.fieldname} to instance of ${this.RelatedEntity.id}`)
     }
-    this.relatedEntity.clearForeignKeyIndex(
-      this.foreignKeyField,
-      instance.id,
-    );
-    if (value) {
-      this.relatedEntity.update(value.id, {
-        [this.foreignKeyField]: instance.id,
-      });
+    const { required } = this.foreignKey
+    const existingId = this.RelatedEntity.idsByForeignKey[this.foreignKeyField][instance.id]?.[0]
+
+    if (existingId && existingId !== value?.id) {
+      if (required) {
+        this.RelatedEntity.delete(existingId)
+      } else {
+        this.RelatedEntity.update(existingId, { [this.foreignKeyField]: null })
+      }
+    }
+
+    if (value && value.id !== existingId) {
+      this.RelatedEntity.update(value.id, {
+        [this.foreignKeyField]: instance.id
+      })
     }
   }
-  expand() {
+
+  expand () {
     return [
       new BelongsTo({
-        primaryEntity: this.relatedEntity,
-        relatedEntity: this.primaryEntity,
-        deleteCascade: this.deleteCascade,
-        foreignKeyField: this.foreignKeyField,
-      }),
-    ];
+        PrimaryEntity: this.RelatedEntity,
+        RelatedEntity: this.PrimaryEntity,
+        foreignKeyField: this.foreignKeyField
+      })
+    ]
   }
 }

@@ -1,63 +1,86 @@
-import create from "./actions/create";
-import update from "./actions/update";
-import _delete from "./actions/delete";
-import clearForeignKeyIndex from "./actions/clear-fk-index";
+import _ from 'lodash'
+import Entity from './entity'
+import create from './actions/create'
+import update from './actions/update'
+import _delete from './actions/delete'
 
-export default function (defineStore, entities) {
-  // RELATION STUFF;
-  const entitiesById = entities.reduce(
-    (acc, entity) => ({ ...acc, [entity.id]: entity }),
+function normie (defineStore, EntityClasses) {
+  EntityClasses.forEach((EntityClass) => {
+    if (typeof EntityClass.id !== 'string') {
+      throw new Error(`entity class ${EntityClass.name} must have id defined as a string`)
+    }
+    if (!_.isPlainObject(EntityClass.fields)) {
+      throw new Error(`entity class "${EntityClass.id}" must have fields defined as an object`)
+    }
+    EntityClass.initialize()
+  })
+
+  const entitiesById = EntityClasses.reduce(
+    (acc, EntityClass) => ({ ...acc, [EntityClass.id]: EntityClass }),
     {}
-  );
+  )
 
-  entities.forEach((entity) => entity.resetRelations());
-
-  entities.forEach((entity) => {
-    const relations = Object.entries(entity.fields)
-      .filter(([, field]) => field?.RelationClass)
-      .map(([fieldname, { RelationClass, ...props }]) => {
-        const relatedEntity =
-          typeof props.relatedEntity === "string"
-            ? entitiesById[props.relatedEntity]
-            : props.relatedEntity;
-        return new RelationClass({ ...props, relatedEntity, fieldname });
+  EntityClasses.forEach((EntityClass) => {
+    // FOREIGN KEY STUFF;
+    Object.entries(EntityClass.fields)
+      .filter(([, value]) => value?.isForeignKey)
+      .forEach(([fieldname, { isForeignKey, ...foreignKey }]) => {
+        const RelatedEntity = typeof foreignKey.RelatedEntity === 'string'
+          ? entitiesById[foreignKey.RelatedEntity]
+          : foreignKey.RelatedEntity
+        if (!RelatedEntity) {
+          throw new Error(`entity ${foreignKey.RelatedEntity} has not been initialized`)
+        }
+        EntityClass.addForeignKey(fieldname, { ...foreignKey, RelatedEntity })
       })
 
-    relations
-      .filter((relation) => relation.expand)
-      .forEach((relation) => {
-        // handle ManyToMany and HasManyThrough, which are made of multiple relations;
-        const subrelations = relation.expand();
-        subrelations.forEach((subrelation) => relations.push(subrelation));
+    // RELATION STUFF;
+    const relations = Object.entries(EntityClass.fields)
+      .filter(([, field]) => field?.RelationClass)
+      .map(([fieldname, { RelationClass, ...props }]) => {
+        const RelatedEntity = typeof props.RelatedEntity === 'string'
+          ? entitiesById[props.RelatedEntity]
+          : props.RelatedEntity
+        if (!RelatedEntity) {
+          throw new Error(`entity ${props.RelatedEntity} has not been initialized`)
+        }
+        return new RelationClass({ ...props, RelatedEntity, fieldname })
       })
 
     relations.forEach((relation) => {
-      relation.primaryEntity.addRelation(relation);
-      relation.relatedEntity.addDependentRelation(relation);
-    });
-  });
+      // handle ManyToMany and HasManyThrough, which are made of multiple relations;
+      relation.expand?.()?.forEach?.((subrelation) => relations.push(subrelation))
+    })
+
+    relations.forEach((relation) => {
+      relation.PrimaryEntity.addRelation(relation)
+    })
+  })
 
   // STORE STUFF;
-  const getInitialEntityState = (entity) => ({
+  const getInitialEntityState = (EntityClass) => ({
     dataById: {},
-    idsByForeignKey: entity.foreignKeyFields.reduce(
-      (acc, field) => ({ ...acc, [field]: {} }),
-      {}
-    ),
-  });
+    idsByForeignKey: Object.values(EntityClass.foreignKeysByFieldName)
+      .reduce(
+        (acc, { fieldname }) => ({ ...acc, [fieldname]: {} }),
+        {}
+      )
+  })
 
-  const initialState = entities.reduce(
-    (acc, entity) => ({ ...acc, [entity.id]: getInitialEntityState(entity) }),
+  const initialState = EntityClasses.reduce(
+    (acc, EntityClass) => ({ ...acc, [EntityClass.id]: getInitialEntityState(EntityClass) }),
     {}
-  );
+  )
 
   const storeDefinition = {
     state: () => initialState,
-    actions: { create, update, delete: _delete, clearForeignKeyIndex },
-  };
+    actions: { create, update, delete: _delete }
+  }
 
-  const useEntitiesStore = defineStore("entities", storeDefinition);
-  const entitiesStore = useEntitiesStore();
+  const useEntityClassesStore = defineStore('entities', storeDefinition)
+  const entitiesStore = useEntityClassesStore()
 
-  entities.forEach((entity) => entity.setStore(entitiesStore));
+  EntityClasses.forEach((EntityClass) => EntityClass.setStore(entitiesStore))
 }
+
+export { normie, Entity }

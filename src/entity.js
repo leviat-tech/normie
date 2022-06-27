@@ -1,185 +1,174 @@
-import { reactive } from '@vue/reactivity';
-import fp from 'lodash/fp';
-import HasOne from './relations/has-one';
-import HasMany from './relations/has-many';
-import BelongsTo from './relations/belongs-to';
-import ManyToMany from './relations/many-to-many';
+import { reactive } from '@vue/reactivity'
+import HasOne from './relations/has-one'
+import HasMany from './relations/has-many'
+import BelongsTo from './relations/belongs-to'
+import ManyToMany from './relations/many-to-many'
 
 export default class Entity {
-
-  constructor(props) {
-    this.data = reactive(props);
+  constructor (props) {
+    this.data = reactive(props)
     return new Proxy(this, {
-      get(target, prop) {
-        const dataById = target.constructor.dataById;
-        if (!dataById[target.data.id]) {
-          throw `instance with id ${target.data.id} does not exist.`
-        }
+      get (target, prop) {
+        const EntityClass = target.constructor
         if (prop === 'constructor') {
-          return Reflect.get(...arguments);
+          return Reflect.get(...arguments)
         }
         if (prop === '_data') {
-          return target.data;
+          return target.data
         }
-        const relation = target.constructor.relationsByFieldName[prop];
+        const relation = EntityClass.relationsByFieldName[prop]
         if (relation?.get) {
-          return relation.get(target.data);
+          if (!EntityClass.dataById[target.data.id]) {
+            throw new Error(`cannot set property; id ${target.data.id} does not exist in ${EntityClass.id}`)
+          }
+          return relation.get(target.data)
         }
         if (target.data[prop]) {
-          return target.data[prop];
+          return target.data[prop]
         }
-        return Reflect.get(...arguments);
+        return Reflect.get(...arguments)
       },
-      set(target, prop, value) {
-        const parent = target.constructor;
-        const dataById = parent.dataById;
-        if (!dataById[target.data.id]) {
-          throw `instance with id ${target.data.id} does not exist.`
-        }
-        const relation = parent.relationsByFieldName[prop];
+      set (target, prop, value) {
+        const EntityClass = target.constructor
+        const relation = EntityClass.relationsByFieldName[prop]
         if (relation) {
-          relation.set(target.data, value);
-          return true;
+          if (!EntityClass.dataById[target.data.id]) {
+            throw new Error(`cannot set property; id ${target.data.id} does not exist in ${EntityClass.id}`)
+          }
+          relation.set(target.data, value)
+          return true
         }
-        if (!parent.fields[prop] === undefined) {
-          console.warn(`warning: property ${prop} not defined in ${parent.id} fields`);
+        if (!EntityClass.fields[prop] === undefined) {
+          console.warn(`warning: property ${prop} not defined in ${EntityClass.id} fields`)
         }
-        parent.update(target.data.id, { [prop]: value });
-        return true;
-      },
-    });
+        EntityClass.update(target.data.id, { [prop]: value })
+        return true
+      }
+    })
   }
 
-  static setStore(store) {
-    this.store = store;
+  static setStore (store) {
+    this.store = store
   }
 
-  static resetRelations() {
-    this.relations = [];
-    this.dependentRelations = [];
+  static initialize () {
+    this.relations = []
+    this.dependentBelongsToRelations = []
+    this.foreignKeysByFieldName = {}
   }
 
-  static addBelongsToRelation(relations, relation) {
-    const existingBelongsToEquivalent = relations.find((_relation) => 
-      (_relation instanceof BelongsTo)
-        && _relation.primaryEntity.id == relation.primaryEntity.id
-        && _relation.relatedEntity.id == relation.relatedEntity.id
-        && _relation.foreignKeyField == relation.foreignKeyField
-    )
-    if (!existingBelongsToEquivalent) {
-      relations.push(relation);
+  static addBelongsToRelation (relations, relation) {
+    // HasOne, HasMany etc create BelongsTo relations so there may be some duplicates
+    // prioritize BelongsTo with fieldname
+    const identicalBelongsTo = relations.find((_relation) => (_relation instanceof BelongsTo) &&
+      _relation.PrimaryEntity.id === relation.PrimaryEntity.id &&
+      _relation.RelatedEntity.id === relation.RelatedEntity.id &&
+      _relation.foreignKeyField === relation.foreignKeyField)
+    if (!identicalBelongsTo) {
+      relations.push(relation)
     } else {
       if (relation.fieldname) {
-        existingBelongsToEquivalent.fieldname = relation.fieldname;
-      }
-      if (relation.deleteCascade) {
-        existingBelongsToEquivalent.deleteCascade = relation.deleteCascade;
+        identicalBelongsTo.fieldname = relation.fieldname
       }
     }
   }
 
-  static addRelation(relation) {
+  static addRelation (relation) {
     if (relation instanceof BelongsTo) {
-      this.addBelongsToRelation(this.relations, relation);
+      this.addBelongsToRelation(this.relations, relation)
+      relation.RelatedEntity.addDependentBelongsToRelation(relation)
     } else {
-      this.relations.push(relation);
+      this.relations.push(relation)
     }
   }
 
-  static addDependentRelation(relation) {
-    if (relation instanceof BelongsTo) {
-      this.addBelongsToRelation(this.dependentRelations, relation);
-    }
+  static addDependentBelongsToRelation (relation) {
+    this.addBelongsToRelation(this.dependentBelongsToRelations, relation)
   }
 
-  static get foreignKeyFields() {
-    // any relations that reference a foreign key on this entity
-    return fp.flow(
-      fp.filter((relation) => relation instanceof BelongsTo),
-      fp.map('foreignKeyField'),
-      fp.uniq(),
-    )(this.relations);
+  static addForeignKey (fieldname, foreignKey) {
+    this.foreignKeysByFieldName[fieldname] = { ...foreignKey, fieldname }
   }
 
-  static get relationsByFieldName() {
+  static get relationsByFieldName () {
     return this.relations.reduce(
-      (acc, relation) => relation.fieldname
+      (acc, relation) => (relation.fieldname
         ? { ...acc, [relation.fieldname]: relation }
-        : acc,
+        : acc),
       {}
-    );
+    )
   }
 
-  static get dataById() {
-    return this.store[this.id].dataById;
+  static get dataById () {
+    return this.store[this.id].dataById
   }
 
-  static get idsByForeignKey() {
-    return this.store[this.id].idsByForeignKey;
+  static get idsByForeignKey () {
+    return this.store[this.id].idsByForeignKey
   }
 
-  static get read() {
-    return Object.values(this.dataById).map((data) => new this(data));
+  static find (id) {
+    return this(this.dataById[id])
   }
 
-  static find(id) {
-    return this(this.dataById[id]);
+  static create (data = {}) {
+    return this.store.create(this, data)
   }
 
-  static create(data = {}) {
-    return this.store.create(this, data);
+  static read () {
+    return Object.values(this.dataById).map((data) => new this(data))
   }
 
-  static update(id, patch) {
-    return this.store.update(this, id, patch);
+  static update (id, patch) {
+    return this.store.update(this, id, patch)
   }
 
-  static delete(id) {
-    return this.store.delete(this, id);
+  static delete (id) {
+    return this.store.delete(this, id)
   }
 
-  static clearForeignKeyIndex(foreignKeyField, foreignKey) {
-    return this.store.clearForeignKeyIndex(this, foreignKeyField, foreignKey);
+  static clearForeignKeyIndex (foreignKeyField, foreignKey) {
+    return this.store.clearForeignKeyIndex(this, foreignKeyField, foreignKey)
   }
 
-  $update(patch) {
-    return this.constructor.update(this.id, patch);
+  $update (patch) {
+    return this.constructor.update(this.id, patch)
   }
 
-  $delete() {
-    return this.constructor.delete(this.id);
+  $delete () {
+    return this.constructor.delete(this.id)
   }
 
-  $toJSON(path = '*') {
+  $toJSON (path = '*') {
     const serialize = (instance, path) => {
-      const relationsByFieldName = instance.constructor.relationsByFieldName;
+      const { relationsByFieldName } = instance.constructor
       const addRelationToJSON = (json, path) => {
-        const periodIndex = path.indexOf('.');
-        let childFieldName;
-        let remainingPath;
-  
+        const periodIndex = path.indexOf('.')
+        let childFieldName
+        let remainingPath
+
         if (periodIndex === -1) {
-          childFieldName = path;
-          remainingPath = null;
+          childFieldName = path
+          remainingPath = null
         } else {
-          childFieldName = path.slice(0, periodIndex);
-          remainingPath = path.slice(periodIndex + 1);
+          childFieldName = path.slice(0, periodIndex)
+          remainingPath = path.slice(periodIndex + 1)
         }
 
         if (!relationsByFieldName[childFieldName]) {
-          throw `relation ${childFieldName} does not exist on ${instance.constructor.id}`;
+          throw new Error(`relation ${childFieldName} does not exist on ${instance.constructor.id}`)
         }
-  
-        const child = instance[childFieldName];
+
+        const child = instance[childFieldName]
         const childJSON = Array.isArray(child)
           ? child.map((_child) => serialize(_child, remainingPath))
-          : serialize(child, remainingPath);
-  
-        return { ...json, [childFieldName]: childJSON };
+          : serialize(child, remainingPath)
+
+        return { ...json, [childFieldName]: childJSON }
       }
 
-      const serialized = instance?._data;
-      if (!path || !serialized) return serialized;
+      const serialized = instance?._data
+      if (!path || !serialized) return serialized
       if (path.startsWith('[')) {
         return path.slice(1, -1).split(',')
           .map((str) => str.replaceAll(' ', ''))
@@ -188,58 +177,51 @@ export default class Entity {
       if (path === '*') {
         return Object.keys(relationsByFieldName).reduce(addRelationToJSON, serialized)
       }
-      return addRelationToJSON(serialized, path);
+      return addRelationToJSON(serialized, path)
     }
-    return serialize(this, path);
+    return serialize(this, path)
   }
 
   // RELATION STUFF
-  static belongsTo(relatedEntity, foreignKeyField, opts = {}) {
-    return {
-      primaryEntity: this,
-      relatedEntity,
-      foreignKeyField,
-      deleteCascade: opts.deleteCascade,
-      RelationClass: BelongsTo,
-    };
+  static foreignKey (RelatedEntity, opts = {}) {
+    return { RelatedEntity, required: opts.required, isForeignKey: true }
   }
 
-  static hasOne(relatedEntity, foreignKeyField, opts = {}) {
+  static belongsTo (RelatedEntity, foreignKeyField, opts = {}) {
     return {
-      primaryEntity: this,
-      relatedEntity,
+      PrimaryEntity: this,
+      RelatedEntity,
       foreignKeyField,
-      deleteCascade: opts.deleteCascade,
-      RelationClass: HasOne,
-    };
-  }
-
-  static hasMany(relatedEntity, foreignKeyField, opts = {}) {
-    return {
-      primaryEntity: this,
-      relatedEntity,
-      foreignKeyField,
-      deleteCascade: opts.deleteCascade,
-      RelationClass: HasMany,
-    };
-  }
-
-  static manyToMany(
-    relatedEntity,
-    pivotEntity,
-    primaryForeignKeyField,
-    relatedForeignKeyField,
-    opts = {},
-   ) {
-    return {
-      primaryEntity: this,
-      relatedEntity,
-      pivotEntity,
-      primaryForeignKeyField,
-      relatedForeignKeyField,
-      deleteCascadePivot: opts.deleteCascadePivot,
-      RelationClass: ManyToMany,
+      RelationClass: BelongsTo
     }
   }
 
+  static hasOne (RelatedEntity, foreignKeyField, opts = {}) {
+    return {
+      PrimaryEntity: this,
+      RelatedEntity,
+      foreignKeyField,
+      RelationClass: HasOne
+    }
+  }
+
+  static hasMany (RelatedEntity, foreignKeyField, opts = {}) {
+    return {
+      PrimaryEntity: this,
+      RelatedEntity,
+      foreignKeyField,
+      RelationClass: HasMany
+    }
+  }
+
+  static manyToMany (RelatedEntity, pivotEntity, primaryForeignKeyField, relatedForeignKeyField) {
+    return {
+      PrimaryEntity: this,
+      RelatedEntity,
+      pivotEntity,
+      primaryForeignKeyField,
+      relatedForeignKeyField,
+      RelationClass: ManyToMany
+    }
+  }
 }

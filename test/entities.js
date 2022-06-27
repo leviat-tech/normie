@@ -1,54 +1,55 @@
-import Entity from '../src/entity';
+import Entity from '../src/entity'
 
 export class Zone extends Entity {
-  static id = 'zones';
+  static id = 'zones'
 
   static fields = {
     materialPreferences: {
       paintCoat: 'P1',
-      ralColor: 'STD',
+      ralColor: 'STD'
     },
     assemblies: this.hasMany('assemblies', 'zoneId'),
-    segment: this.hasOne('segments', 'zoneId'),
-  };
+    segment: this.hasOne('segments', 'zoneId')
+  }
 }
 
 export class Assembly extends Entity {
-  static id = 'assemblies';
+  static id = 'assemblies'
 
   static fields = {
     position: 0,
     profile: {
       radius: 0.005,
       width: 0.07,
-      height: 0.05,
+      height: 0.05
     },
-    zoneId: null,
-    zone: this.belongsTo(Zone, 'zoneId'),
-  };
+    zoneId: this.foreignKey(Zone),
+    zone: this.belongsTo(Zone, 'zoneId')
+  }
 }
 
 export class Segment extends Entity {
-  static id = 'segments';
-  
+  static id = 'segments'
+
   static fields = {
     length: 0,
-    zoneId: null,
-    sectionId: null,
-    section: this.belongsTo('sections', 'sectionId'),
+    zoneId: this.foreignKey(Zone),
+    sectionId: this.foreignKey('sections'),
     zone: this.belongsTo(Zone, 'zoneId'),
+    section: this.belongsTo('sections', 'sectionId')
   }
 }
 
 export class Section extends Entity {
-  static id = 'sections';
+  static id = 'sections'
 
   static fields = {
     description: '',
     masonry: {
       material: '',
-      thickness: 0.1,
+      thickness: 0.1
     },
-    zones: this.manyToMany(Zone, Segment, 'sectionId', 'zoneId'),
+    segment: this.hasOne(Segment, 'sectionId'),
+    zones: this.manyToMany(Zone, Segment, 'sectionId', 'zoneId')
   }
 }
