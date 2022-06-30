@@ -23,7 +23,6 @@ export class Assembly extends Entity {
       width: 0.07,
       height: 0.05
     },
-    zoneId: this.foreignKey(Zone),
     zone: this.belongsTo(Zone, 'zoneId')
   }
 }
@@ -33,8 +32,6 @@ export class Segment extends Entity {
 
   static fields = {
     length: 0,
-    zoneId: this.foreignKey(Zone),
-    sectionId: this.foreignKey('sections'),
     zone: this.belongsTo(Zone, 'zoneId'),
     section: this.belongsTo('sections', 'sectionId')
   }

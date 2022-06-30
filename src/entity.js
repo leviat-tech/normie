@@ -1,4 +1,5 @@
 import { reactive } from '@vue/reactivity'
+import _ from 'lodash'
 import HasOne from './relations/has-one'
 import HasMany from './relations/has-many'
 import BelongsTo from './relations/belongs-to'
@@ -54,7 +55,7 @@ export default class Entity {
   static initialize () {
     this.relations = []
     this.dependentBelongsToRelations = []
-    this.foreignKeysByFieldName = {}
+    this.foreignKeys = []
   }
 
   static addBelongsToRelation (relations, relation) {
@@ -82,21 +83,20 @@ export default class Entity {
     }
   }
 
-  static addDependentBelongsToRelation (relation) {
-    this.addBelongsToRelation(this.dependentBelongsToRelations, relation)
+  static addDependentBelongsToRelation (belongsTo) {
+    this.addBelongsToRelation(this.dependentBelongsToRelations, belongsTo)
   }
 
-  static addForeignKey (fieldname, foreignKey) {
-    this.foreignKeysByFieldName[fieldname] = { ...foreignKey, fieldname }
+  static addForeignKey (foreignKey) {
+    this.foreignKeys.push(foreignKey)
   }
 
   static get relationsByFieldName () {
-    return this.relations.reduce(
-      (acc, relation) => (relation.fieldname
-        ? { ...acc, [relation.fieldname]: relation }
-        : acc),
-      {}
-    )
+    return _.mapValues(_.groupBy(this.relations, 'fieldname'), _.first)
+  }
+
+  static get foreignKeysByFieldName () {
+    return _.mapValues(_.groupBy(this.foreignKeys, 'fieldname'), _.first)
   }
 
   static get dataById () {
@@ -139,9 +139,10 @@ export default class Entity {
     return this.constructor.delete(this.id)
   }
 
-  $toJSON (path = '*') {
+  $toJSON (path = '', context = null) {
     const serialize = (instance, path) => {
-      const { relationsByFieldName } = instance.constructor
+      if (!instance) return null
+      const { relationsByFieldName, id: entityId, format } = instance.constructor
       const addRelationToJSON = (json, path) => {
         const periodIndex = path.indexOf('.')
         let childFieldName
@@ -156,7 +157,7 @@ export default class Entity {
         }
 
         if (!relationsByFieldName[childFieldName]) {
-          throw new Error(`relation ${childFieldName} does not exist on ${instance.constructor.id}`)
+          throw new Error(`relation ${childFieldName} does not exist on ${entityId}`)
         }
 
         const child = instance[childFieldName]
@@ -167,7 +168,12 @@ export default class Entity {
         return { ...json, [childFieldName]: childJSON }
       }
 
-      const serialized = instance?._data
+      const serialized = format?.(instance._data, context) || instance._data
+
+      if (serialized && !_.isPlainObject(serialized)) {
+        throw new Error(`custom serializer of ${entityId} must return an object`)
+      }
+
       if (!path || !serialized) return serialized
       if (path.startsWith('[')) {
         return path.slice(1, -1).split(',')
@@ -187,7 +193,7 @@ export default class Entity {
     return { RelatedEntity, required: opts.required, isForeignKey: true }
   }
 
-  static belongsTo (RelatedEntity, foreignKeyField, opts = {}) {
+  static belongsTo (RelatedEntity, foreignKeyField) {
     return {
       PrimaryEntity: this,
       RelatedEntity,
@@ -196,7 +202,7 @@ export default class Entity {
     }
   }
 
-  static hasOne (RelatedEntity, foreignKeyField, opts = {}) {
+  static hasOne (RelatedEntity, foreignKeyField) {
     return {
       PrimaryEntity: this,
       RelatedEntity,
@@ -205,7 +211,7 @@ export default class Entity {
     }
   }
 
-  static hasMany (RelatedEntity, foreignKeyField, opts = {}) {
+  static hasMany (RelatedEntity, foreignKeyField) {
     return {
       PrimaryEntity: this,
       RelatedEntity,

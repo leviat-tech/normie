@@ -4,8 +4,8 @@ import Relation from './relation'
 export default class BelongsTo extends Relation {
   constructor (props) {
     super(props)
-    if (!this.PrimaryEntity.fields[this.foreignKeyField]?.isForeignKey) {
-      throw new Error(`${this.foreignKeyField} is not a foreign key on ${this.PrimaryEntity.id}`)
+    if (!this.PrimaryEntity.foreignKeysByFieldName[this.foreignKeyField]) {
+      throw new Error(`${this.foreignKeyField} is not a foreign key on ${this.PrimaryEntity.name}`)
     }
   }
 

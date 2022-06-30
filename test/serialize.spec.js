@@ -66,6 +66,11 @@ describe('serialization', () => {
     expect(segment.$toJSON('section.[zones.assemblies, segment]')).toEqual(expected)
   })
 
+  it('can serialize with a custom formatter', () => {
+    Zone.format = () => ({ hey: 'hi!' })
+    expect(zone.$toJSON()).toEqual({ hey: 'hi!' })
+  })
+
   it('cannot serialize a nonexistent property', () => {
     expect(() => segment.$toJSON('oops')).toThrowError()
   })

@@ -1,14 +1,11 @@
 import _ from 'lodash'
-import fp from 'lodash/fp'
 import { v4 as uuidv4 } from 'uuid'
 
 export default function create (Entity, json) {
   const id = json.id || uuidv4()
-  const relationFieldNames = _.keys(Entity.relationsByFieldName)
-  const defaults = fp.flow(
-    fp.omit(relationFieldNames),
-    fp.mapValues((value) => value?.isForeignKey ? null : value)
-  )(Entity.fields)
+  const relationFieldNames = Object.keys(Entity.relationsByFieldName)
+  const nullForeignKeys = _.mapValues(Entity.foreignKeysByFieldName, () => null)
+  const defaults = _.omit({ ...Entity.fields, ...nullForeignKeys }, relationFieldNames)
 
   const data = _.merge(defaults, { id, ...json })
   if (Entity.dataById[id]) {
@@ -24,21 +21,20 @@ export default function create (Entity, json) {
       relation.onCreateWithRelated(data, related)
     }
   })
-  Object.values(Entity.foreignKeysByFieldName)
-    .forEach(({ fieldname, required, RelatedEntity }) => {
-      const foreignKey = data[fieldname]
-      if (foreignKey) {
-        if (!RelatedEntity.dataById[foreignKey] && required) {
-          throw new Error(`${fieldname} of value ${foreignKey} does not exist in ${RelatedEntity.id}`)
-        }
-        Entity.idsByForeignKey[fieldname][foreignKey] ??= []
-        Entity.idsByForeignKey[fieldname][foreignKey].push(data.id)
-      } else {
-        if (required) {
-          throw new Error(`foreign key ${fieldname} on ${Entity.id} is required`)
-        }
+  Entity.foreignKeys.forEach(({ fieldname, required, RelatedEntity }) => {
+    const foreignKey = data[fieldname]
+    if (foreignKey) {
+      if (!RelatedEntity.dataById[foreignKey] && required) {
+        throw new Error(`${fieldname} of value ${foreignKey} does not exist in ${RelatedEntity.id}`)
       }
-    })
+      Entity.idsByForeignKey[fieldname][foreignKey] ??= []
+      Entity.idsByForeignKey[fieldname][foreignKey].push(data.id)
+    } else {
+      if (required) {
+        throw new Error(`foreign key ${fieldname} on ${Entity.id} is required`)
+      }
+    }
+  })
   Entity.dataById[id] = data
 
   const instance = new Entity(data)
