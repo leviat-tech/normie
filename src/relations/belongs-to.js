@@ -1,6 +1,6 @@
 import _ from 'lodash'
 import Relation from './relation'
-import { InvalidForeignKeyError, InvalidCreateError, InvalidUpdateError } from '../exceptions'
+import { InvalidForeignKeyError, CreateError, UpdateError } from '../exceptions'
 
 export default class BelongsTo extends Relation {
   constructor (props) {
@@ -25,10 +25,10 @@ export default class BelongsTo extends Relation {
   // called when an instance of PrimaryEntity is being created with a relation
   onCreateWithRelated (data, related) {
     if (data[this.foreignKeyField]) {
-      throw new InvalidCreateError(`cannot create relation when data has existing foreign key ${this.foreignKeyField}`)
+      throw new CreateError(`cannot create relation when data has existing foreign key ${this.foreignKeyField}`)
     }
     if (!_.isPlainObject(related)) {
-      throw new InvalidCreateError(`belongsTo relation "${this.fieldname}" must be an object`)
+      throw new CreateError(`belongsTo relation "${this.fieldname}" must be an object`)
     }
     const { id } = this.RelatedEntity.create(related)
     data[this.foreignKeyField] = id
@@ -37,7 +37,7 @@ export default class BelongsTo extends Relation {
   // called when relation.fieldname is called as a setter by instance;
   set (instance, value) {
     if (!(value instanceof this.RelatedEntity) && value !== null) {
-      throw new InvalidUpdateError(`must set ${this.fieldname} to instance of ${this.RelatedEntity.name}`)
+      throw new UpdateError(`must set ${this.fieldname} to instance of ${this.RelatedEntity.name}`)
     }
     this.PrimaryEntity.update(instance.id, {
       [this.foreignKeyField]: value?.id || null

@@ -1,7 +1,6 @@
 import { beforeEach, describe, it, expect } from 'vitest'
 import { defineStore, setActivePinia, createPinia } from 'pinia'
-import { watch, nextTick } from 'vue'
-import { normie } from '../src/normie'
+import normie from '../src/normie'
 import Entity from '../src/entity'
 import { InvalidEntityError, InvalidForeignKeyError } from '../src/exceptions'
 
@@ -10,42 +9,18 @@ describe('entities', () => {
     setActivePinia(createPinia())
   })
 
-  it('inherits static methods', () => {
+  it('can query', () => {
     class E extends Entity {
       static id = 'e'
       static fields = {}
-      static get first () {
-        return this.read()[0]
-      }
     }
     normie(defineStore, [E])
-    E.create()
-    expect(E.first).toBeTruthy()
-  })
 
-  it('ensures reactivity in static methods', async () => {
-    class E extends Entity {
-      static id = 'e'
-      static fields = {}
-      static get evens () {
-        return this.read().filter((_, i) => i % 2 === 0)
-      }
-    }
+    E.create({ id: 1 })
+    E.create({ id: 2 })
 
-    normie(defineStore, [E])
-
-    let changed = 0
-    watch(
-      () => E.evens.length,
-      () => changed++
-    )
-    E.create()
-    await nextTick()
-    E.create()
-    await nextTick()
-    E.create()
-    await nextTick()
-    expect(changed).toBe(2)
+    expect(E.find(1).id).toBe(1)
+    expect(E.read().length).toBe(2)
   })
 
   it('cannot create an entity with no id', () => {
@@ -61,39 +36,39 @@ describe('entities', () => {
   })
 
   it('cannot link to a nonexistent entity in a foreign key', () => {
-    class InvalidForeignKey extends Entity {
-      static id = 'invalidForeignKey'
+    class ForeignKey extends Entity {
+      static id = 'ForeignKey'
       static fields = {
         zoneId: this.foreignKey('zones')
       }
     }
-    expect(() => normie(defineStore, [InvalidForeignKey])).toThrowError(InvalidEntityError)
+    expect(() => normie(defineStore, [ForeignKey])).toThrowError(InvalidEntityError)
   })
 
   it('cannot link to a nonexistent entity in a relation', () => {
-    class InvalidParent extends Entity {
+    class Parent extends Entity {
       static id = 'parent'
       static fields = {
         children: this.hasMany('child', 'parentId')
       }
     }
-    expect(() => normie(defineStore, [InvalidParent])).toThrowError(InvalidEntityError)
+    expect(() => normie(defineStore, [Parent])).toThrowError(InvalidEntityError)
   })
 
   it('cannot link to a nonexistent foreign key in a relation', () => {
-    class InvalidParent extends Entity {
+    class Parent extends Entity {
       static id = 'parent'
       static fields = {
         children: this.hasMany('child', 'parentId')
       }
     }
-    class InvalidChild extends Entity {
+    class Child extends Entity {
       static id = 'child'
       static fields = {
         parentId: 'not a foreign key'
       }
     }
-    expect(() => normie(defineStore, [InvalidParent, InvalidChild])).toThrowError(InvalidForeignKeyError)
+    expect(() => normie(defineStore, [Parent, Child])).toThrowError(InvalidForeignKeyError)
   })
 
   it('calls onCreate', () => {

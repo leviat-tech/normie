@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { defineStore, setActivePinia, createPinia } from 'pinia'
 import { Zone, Assembly, Segment, Section } from './entities'
-import { normie } from '../src/normie'
-import { InvalidSerializationError } from '../src/exceptions'
+import normie from '../src/normie'
+import { SerializationError } from '../src/exceptions'
 
 describe('serialization', () => {
   let zone
@@ -73,6 +73,6 @@ describe('serialization', () => {
   })
 
   it('cannot serialize a nonexistent property', () => {
-    expect(() => segment.$toJSON('oops')).toThrowError(InvalidSerializationError)
+    expect(() => segment.$toJSON('oops')).toThrowError(SerializationError)
   })
 })

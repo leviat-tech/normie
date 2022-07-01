@@ -1,6 +1,6 @@
 import { beforeEach, describe, it, expect } from 'vitest'
 import { defineStore, setActivePinia, createPinia } from 'pinia'
-import { normie } from '../src/normie'
+import normie from '../src/normie'
 import Entity from '../src/entity'
 import { InvalidForeignKeyError, DoesNotExistError } from '../src/exceptions'
 

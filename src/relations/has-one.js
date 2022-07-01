@@ -1,7 +1,7 @@
 import _ from 'lodash'
 import Relation from './relation'
 import BelongsTo from './belongs-to'
-import { InvalidCreateError, InvalidUpdateError } from '../exceptions'
+import { CreateError, UpdateError } from '../exceptions'
 
 export default class HasOne extends Relation {
   get foreignKey () {
@@ -18,17 +18,17 @@ export default class HasOne extends Relation {
   onCreateWithRelated (data, related) {
     const foreignKey = related[this.foreignKeyField]
     if (foreignKey) {
-      throw new InvalidCreateError(`relation's ${this.foreignKeyField} must be empty; is set to ${foreignKey}`)
+      throw new CreateError(`relation's ${this.foreignKeyField} must be empty; is set to ${foreignKey}`)
     }
     if (!_.isPlainObject(related)) {
-      throw new InvalidCreateError(`hasOne relation "${this.fieldname}" must be an object`)
+      throw new CreateError(`hasOne relation "${this.fieldname}" must be an object`)
     }
     this.RelatedEntity.create({ ...related, [this.foreignKeyField]: data.id })
   }
 
   set (instance, value) {
     if (!(value instanceof this.RelatedEntity) && value !== null) {
-      throw new InvalidUpdateError(`must set ${this.fieldname} to instance of ${this.RelatedEntity.name}`)
+      throw new UpdateError(`must set ${this.fieldname} to instance of ${this.RelatedEntity.name}`)
     }
     const { required } = this.foreignKey
     const existingId = this.RelatedEntity.idsByForeignKey[this.foreignKeyField][instance.id]?.[0]

@@ -1,52 +1,13 @@
 import { reactive } from '@vue/reactivity'
 import _ from 'lodash'
-import HasOne from './relations/has-one'
-import HasMany from './relations/has-many'
-import BelongsTo from './relations/belongs-to'
-import ManyToMany from './relations/many-to-many'
-import { InvalidSerializationError, DoesNotExistError } from './exceptions'
+import { HasOne, HasMany, BelongsTo, ManyToMany } from '../relations'
+import entityProxy from './entity-proxy'
+import serialize from './serialize'
 
 export default class Entity {
   constructor (props) {
     this.data = reactive(props)
-    return new Proxy(this, {
-      get (target, prop) {
-        const EntityClass = target.constructor
-        if (prop === 'constructor') {
-          return Reflect.get(...arguments)
-        }
-        if (prop === '_data') {
-          return target.data
-        }
-        const relation = EntityClass.relationsByFieldName[prop]
-        if (relation?.get) {
-          if (!EntityClass.dataById[target.data.id]) {
-            throw new DoesNotExistError(`cannot set property; id ${target.data.id} does not exist in ${EntityClass.id}`)
-          }
-          return relation.get(target.data)
-        }
-        if (target.data[prop]) {
-          return target.data[prop]
-        }
-        return Reflect.get(...arguments)
-      },
-      set (target, prop, value) {
-        const EntityClass = target.constructor
-        const relation = EntityClass.relationsByFieldName[prop]
-        if (relation) {
-          if (!EntityClass.dataById[target.data.id]) {
-            throw new DoesNotExistError(`cannot set property; id ${target.data.id} does not exist in ${EntityClass.id}`)
-          }
-          relation.set(target.data, value)
-          return true
-        }
-        if (!EntityClass.fields[prop] === undefined) {
-          console.warn(`warning: property ${prop} not defined in ${EntityClass.name} fields`)
-        }
-        EntityClass.update(target.data.id, { [prop]: value })
-        return true
-      }
-    })
+    return new Proxy(this, entityProxy)
   }
 
   static setStore (store) {
@@ -109,7 +70,7 @@ export default class Entity {
   }
 
   static find (id) {
-    return this(this.dataById[id])
+    return new this(this.dataById[id])
   }
 
   static create (data = {}) {
@@ -141,52 +102,7 @@ export default class Entity {
   }
 
   $toJSON (path = '', context = null) {
-    const serialize = (instance, path) => {
-      if (!instance) return null
-      const { relationsByFieldName, id: entityId, format } = instance.constructor
-      const addRelationToJSON = (json, path) => {
-        const periodIndex = path.indexOf('.')
-        let childFieldName
-        let remainingPath
-
-        if (periodIndex === -1) {
-          childFieldName = path
-          remainingPath = null
-        } else {
-          childFieldName = path.slice(0, periodIndex)
-          remainingPath = path.slice(periodIndex + 1)
-        }
-
-        if (!relationsByFieldName[childFieldName]) {
-          throw new InvalidSerializationError(`relation ${childFieldName} does not exist on ${entityId}`)
-        }
-
-        const child = instance[childFieldName]
-        const childJSON = Array.isArray(child)
-          ? child.map((_child) => serialize(_child, remainingPath))
-          : serialize(child, remainingPath)
-
-        return { ...json, [childFieldName]: childJSON }
-      }
-
-      const serialized = format?.(instance._data, context) || instance._data
-
-      if (serialized && !_.isPlainObject(serialized)) {
-        throw new InvalidSerializationError(`custom serializer of ${entityId} must return an object`)
-      }
-
-      if (!path || !serialized) return serialized
-      if (path.startsWith('[')) {
-        return path.slice(1, -1).split(',')
-          .map((str) => str.replaceAll(' ', ''))
-          .reduce(addRelationToJSON, serialized)
-      }
-      if (path === '*') {
-        return Object.keys(relationsByFieldName).reduce(addRelationToJSON, serialized)
-      }
-      return addRelationToJSON(serialized, path)
-    }
-    return serialize(this, path)
+    return serialize(this, path, context)
   }
 
   // RELATION STUFF

@@ -2,8 +2,8 @@ import { beforeEach, describe, it, expect } from 'vitest'
 import { defineStore, setActivePinia, createPinia } from 'pinia'
 import { watch, nextTick } from 'vue'
 import { Zone, Assembly, Segment, Section } from '../entities'
-import { normie } from '../../src/normie'
-import { InvalidUpdateError, DoesNotExistError } from '../../src/exceptions'
+import normie from '../../src/normie'
+import { UpdateError, DoesNotExistError } from '../../src/exceptions'
 
 describe('update', () => {
   let zone
@@ -52,7 +52,7 @@ describe('update', () => {
   it("cannot update an instance's id", () => {
     expect(() => {
       assembly.id = 'oh no'
-    }).toThrowError(InvalidUpdateError)
+    }).toThrowError(UpdateError)
   })
 
   it('cannot update properties on a deleted instance', () => {

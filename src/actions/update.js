@@ -1,9 +1,9 @@
 import _ from 'lodash'
-import { InvalidUpdateError, DoesNotExistError } from '../exceptions'
+import { UpdateError, DoesNotExistError } from '../exceptions'
 
 export default function (Entity, id, patch) {
   if (patch.id) {
-    throw new InvalidUpdateError("cannot change an instance's id")
+    throw new UpdateError("cannot change an instance's id")
   }
   const data = Entity.dataById[id]
   if (!data) {

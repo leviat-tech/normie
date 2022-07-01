@@ -2,8 +2,8 @@ import { beforeEach, describe, it, expect } from 'vitest'
 import { defineStore, setActivePinia, createPinia } from 'pinia'
 import { watch, nextTick } from 'vue'
 import { Zone, Assembly, Segment, Section } from '../entities'
-import { normie } from '../../src/normie'
-import { InvalidCreateError } from '../../src/exceptions'
+import normie from '../../src/normie'
+import { CreateError } from '../../src/exceptions'
 
 describe('create', () => {
   beforeEach(() => {
@@ -28,6 +28,6 @@ describe('create', () => {
     const assembly = Assembly.create()
     expect(() => {
       Assembly.create({ id: assembly.id })
-    }).toThrowError(InvalidCreateError)
+    }).toThrowError(CreateError)
   })
 })

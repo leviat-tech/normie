@@ -6,7 +6,7 @@ import { defineConfig } from 'vite'
 export default defineConfig({
   build: {
     lib: {
-      entry: path.resolve(__dirname, 'src/normie.js'),
+      entry: path.resolve(__dirname, 'src/index.js'),
       name: 'normie',
       fileName: (format) => `normie.${format}.js`
     }

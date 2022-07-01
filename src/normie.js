@@ -1,17 +1,8 @@
 import _ from 'lodash'
 import Entity from './entity'
-import create from './actions/create'
-import update from './actions/update'
-import _delete from './actions/delete'
-import BelongsTo from './relations/belongs-to'
-import {
-  InvalidEntityError,
-  InvalidForeignKeyError,
-  InvalidCreateError,
-  InvalidUpdateError,
-  InvalidSerializationError,
-  DoesNotExistError
-} from './exceptions'
+import { create, update, _delete } from './actions'
+import { BelongsTo } from './relations'
+import { InvalidEntityError } from './exceptions'
 
 function validateEntity (EntityClass) {
   if (typeof EntityClass.id !== 'string') {
@@ -25,7 +16,7 @@ function validateEntity (EntityClass) {
   }
 }
 
-function normie (defineStore, EntityClasses) {
+export default function normie (defineStore, EntityClasses) {
   EntityClasses.forEach((EntityClass) => {
     validateEntity(EntityClass)
     EntityClass.initialize()
@@ -104,15 +95,4 @@ function normie (defineStore, EntityClasses) {
   const entitiesStore = useEntityClassesStore()
 
   EntityClasses.forEach((EntityClass) => EntityClass.setStore(entitiesStore))
-}
-
-export {
-  normie,
-  Entity,
-  InvalidEntityError,
-  InvalidForeignKeyError,
-  InvalidCreateError,
-  InvalidUpdateError,
-  InvalidSerializationError,
-  DoesNotExistError
 }
