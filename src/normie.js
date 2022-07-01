@@ -4,31 +4,57 @@ import create from './actions/create'
 import update from './actions/update'
 import _delete from './actions/delete'
 import BelongsTo from './relations/belongs-to'
+import {
+  InvalidEntityError,
+  InvalidForeignKeyError,
+  InvalidCreateError,
+  InvalidUpdateError,
+  InvalidSerializationError,
+  DoesNotExistError
+} from './exceptions'
+
+function validateEntity (EntityClass) {
+  if (typeof EntityClass.id !== 'string') {
+    throw new InvalidEntityError(`entity class ${EntityClass.name} must have id defined as a string`)
+  }
+  if (!_.isPlainObject(EntityClass.fields)) {
+    throw new InvalidEntityError(`entity class "${EntityClass.name}" must have fields defined as an object`)
+  }
+  if (!(EntityClass.prototype instanceof Entity)) {
+    throw new InvalidEntityError(`entity class ${EntityClass.name} must be instance of Entity`)
+  }
+}
 
 function normie (defineStore, EntityClasses) {
   EntityClasses.forEach((EntityClass) => {
-    if (typeof EntityClass.id !== 'string') {
-      throw new Error(`entity class ${EntityClass.name} must have id defined as a string`)
-    }
-    if (!_.isPlainObject(EntityClass.fields)) {
-      throw new Error(`entity class "${EntityClass.id}" must have fields defined as an object`)
-    }
+    validateEntity(EntityClass)
     EntityClass.initialize()
   })
 
   const entitiesById = _.mapValues(_.groupBy(EntityClasses, 'id'), _.first)
+
+  function getRelatedEntity (_RelatedEntity) {
+    let RelatedEntity = _RelatedEntity
+    if (typeof _RelatedEntity === 'string') {
+      RelatedEntity = entitiesById[_RelatedEntity]
+      if (!RelatedEntity) {
+        throw new InvalidEntityError(`entity ${_RelatedEntity} has not been initialized`)
+      }
+    } else {
+      validateEntity(RelatedEntity)
+      if (!entitiesById[RelatedEntity.id]) {
+        throw new InvalidEntityError(`entity ${_RelatedEntity.name} has not been initialized`)
+      }
+    }
+    return RelatedEntity
+  }
 
   EntityClasses.forEach((EntityClass) => {
     // FOREIGN KEY STUFF;
     Object.entries(EntityClass.fields)
       .filter(([, field]) => field?.isForeignKey)
       .forEach(([fieldname, { isForeignKey, ...foreignKey }]) => {
-        const RelatedEntity = typeof foreignKey.RelatedEntity === 'string'
-          ? entitiesById[foreignKey.RelatedEntity]
-          : foreignKey.RelatedEntity
-        if (!RelatedEntity) {
-          throw new Error(`entity ${foreignKey.RelatedEntity} has not been initialized`)
-        }
+        const RelatedEntity = getRelatedEntity(foreignKey.RelatedEntity)
         EntityClass.addForeignKey({ ...foreignKey, RelatedEntity, fieldname })
       })
 
@@ -37,12 +63,7 @@ function normie (defineStore, EntityClasses) {
       .filter(({ foreignKeyField }) => EntityClass.fields[foreignKeyField] === undefined)
       .forEach((belongsTo) => {
         const { foreignKeyField: fieldname, foreignKeyOpts: opts = {} } = belongsTo
-        const RelatedEntity = typeof belongsTo.RelatedEntity === 'string'
-          ? entitiesById[belongsTo.RelatedEntity]
-          : belongsTo.RelatedEntity
-        if (!RelatedEntity) {
-          throw new Error(`entity ${belongsTo.RelatedEntity} has not been initialized`)
-        }
+        const RelatedEntity = getRelatedEntity(belongsTo.RelatedEntity)
         EntityClass.addForeignKey({ RelatedEntity, fieldname, opts })
       })
   })
@@ -52,12 +73,7 @@ function normie (defineStore, EntityClasses) {
     const relations = Object.entries(EntityClass.fields)
       .filter(([, field]) => field?.RelationClass)
       .map(([fieldname, { RelationClass, ...props }]) => {
-        const RelatedEntity = typeof props.RelatedEntity === 'string'
-          ? entitiesById[props.RelatedEntity]
-          : props.RelatedEntity
-        if (!RelatedEntity) {
-          throw new Error(`entity ${props.RelatedEntity} has not been initialized`)
-        }
+        const RelatedEntity = getRelatedEntity(props.RelatedEntity)
         return new RelationClass({ ...props, RelatedEntity, fieldname })
       })
 
@@ -90,4 +106,13 @@ function normie (defineStore, EntityClasses) {
   EntityClasses.forEach((EntityClass) => EntityClass.setStore(entitiesStore))
 }
 
-export { normie, Entity }
+export {
+  normie,
+  Entity,
+  InvalidEntityError,
+  InvalidForeignKeyError,
+  InvalidCreateError,
+  InvalidUpdateError,
+  InvalidSerializationError,
+  DoesNotExistError
+}

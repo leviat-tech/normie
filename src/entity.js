@@ -4,6 +4,7 @@ import HasOne from './relations/has-one'
 import HasMany from './relations/has-many'
 import BelongsTo from './relations/belongs-to'
 import ManyToMany from './relations/many-to-many'
+import { InvalidSerializationError, DoesNotExistError } from './exceptions'
 
 export default class Entity {
   constructor (props) {
@@ -20,7 +21,7 @@ export default class Entity {
         const relation = EntityClass.relationsByFieldName[prop]
         if (relation?.get) {
           if (!EntityClass.dataById[target.data.id]) {
-            throw new Error(`cannot set property; id ${target.data.id} does not exist in ${EntityClass.id}`)
+            throw new DoesNotExistError(`cannot set property; id ${target.data.id} does not exist in ${EntityClass.id}`)
           }
           return relation.get(target.data)
         }
@@ -34,13 +35,13 @@ export default class Entity {
         const relation = EntityClass.relationsByFieldName[prop]
         if (relation) {
           if (!EntityClass.dataById[target.data.id]) {
-            throw new Error(`cannot set property; id ${target.data.id} does not exist in ${EntityClass.id}`)
+            throw new DoesNotExistError(`cannot set property; id ${target.data.id} does not exist in ${EntityClass.id}`)
           }
           relation.set(target.data, value)
           return true
         }
         if (!EntityClass.fields[prop] === undefined) {
-          console.warn(`warning: property ${prop} not defined in ${EntityClass.id} fields`)
+          console.warn(`warning: property ${prop} not defined in ${EntityClass.name} fields`)
         }
         EntityClass.update(target.data.id, { [prop]: value })
         return true
@@ -157,7 +158,7 @@ export default class Entity {
         }
 
         if (!relationsByFieldName[childFieldName]) {
-          throw new Error(`relation ${childFieldName} does not exist on ${entityId}`)
+          throw new InvalidSerializationError(`relation ${childFieldName} does not exist on ${entityId}`)
         }
 
         const child = instance[childFieldName]
@@ -171,7 +172,7 @@ export default class Entity {
       const serialized = format?.(instance._data, context) || instance._data
 
       if (serialized && !_.isPlainObject(serialized)) {
-        throw new Error(`custom serializer of ${entityId} must return an object`)
+        throw new InvalidSerializationError(`custom serializer of ${entityId} must return an object`)
       }
 
       if (!path || !serialized) return serialized

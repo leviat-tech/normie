@@ -1,5 +1,6 @@
 import _ from 'lodash'
 import { v4 as uuidv4 } from 'uuid'
+import { InvalidCreateError, DoesNotExistError } from '../exceptions'
 
 export default function create (Entity, json) {
   const id = json.id || uuidv4()
@@ -9,7 +10,7 @@ export default function create (Entity, json) {
 
   const data = _.merge(defaults, { id, ...json })
   if (Entity.dataById[id]) {
-    throw new Error(`id ${id} already exists in ${Entity.id}`)
+    throw new InvalidCreateError(`id ${id} already exists in ${Entity.id}`)
   }
   // putting data in the store before relations are created will prevent validation errors
   Entity.dataById[id] = data
@@ -25,13 +26,13 @@ export default function create (Entity, json) {
     const foreignKey = data[fieldname]
     if (foreignKey) {
       if (!RelatedEntity.dataById[foreignKey] && required) {
-        throw new Error(`${fieldname} of value ${foreignKey} does not exist in ${RelatedEntity.id}`)
+        throw new DoesNotExistError(`${fieldname} of value ${foreignKey} does not exist in ${RelatedEntity.id}`)
       }
       Entity.idsByForeignKey[fieldname][foreignKey] ??= []
       Entity.idsByForeignKey[fieldname][foreignKey].push(data.id)
     } else {
       if (required) {
-        throw new Error(`foreign key ${fieldname} on ${Entity.id} is required`)
+        throw new InvalidCreateError(`foreign key ${fieldname} on ${Entity.name} is required`)
       }
     }
   })

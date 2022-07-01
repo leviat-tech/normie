@@ -3,6 +3,7 @@ import { defineStore, setActivePinia, createPinia } from 'pinia'
 import { watch, nextTick } from 'vue'
 import { Zone, Assembly, Segment, Section } from '../entities'
 import { normie } from '../../src/normie'
+import { InvalidCreateError } from '../../src/exceptions'
 
 describe('Has One', () => {
   let zone
@@ -57,6 +58,6 @@ describe('Has One', () => {
   })
 
   it('cannot create a relation when a foreign key is defined on the relation', async () => {
-    expect(() => Zone.create({ segment: { zoneId: 'ahh!' } })).toThrowError()
+    expect(() => Zone.create({ segment: { zoneId: 'ahh!' } })).toThrowError(InvalidCreateError)
   })
 })

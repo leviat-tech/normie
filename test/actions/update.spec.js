@@ -3,6 +3,7 @@ import { defineStore, setActivePinia, createPinia } from 'pinia'
 import { watch, nextTick } from 'vue'
 import { Zone, Assembly, Segment, Section } from '../entities'
 import { normie } from '../../src/normie'
+import { InvalidUpdateError, DoesNotExistError } from '../../src/exceptions'
 
 describe('update', () => {
   let zone
@@ -51,14 +52,13 @@ describe('update', () => {
   it("cannot update an instance's id", () => {
     expect(() => {
       assembly.id = 'oh no'
-    }).toThrowError()
+    }).toThrowError(InvalidUpdateError)
   })
 
   it('cannot update properties on a deleted instance', () => {
     assembly.$delete()
-    expect(() => assembly.zone).toThrowError()
     expect(() => {
       assembly.position = 0.5
-    }).toThrowError()
+    }).toThrowError(DoesNotExistError)
   })
 })

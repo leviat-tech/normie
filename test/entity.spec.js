@@ -3,6 +3,7 @@ import { defineStore, setActivePinia, createPinia } from 'pinia'
 import { watch, nextTick } from 'vue'
 import { normie } from '../src/normie'
 import Entity from '../src/entity'
+import { InvalidEntityError, InvalidForeignKeyError } from '../src/exceptions'
 
 describe('entities', () => {
   beforeEach(() => {
@@ -49,14 +50,14 @@ describe('entities', () => {
 
   it('cannot create an entity with no id', () => {
     class NoId extends Entity {}
-    expect(() => normie(defineStore, [NoId])).toThrowError()
+    expect(() => normie(defineStore, [NoId])).toThrowError(InvalidEntityError)
   })
 
   it('cannot create an entity with no fields', () => {
     class NoFields extends Entity {
       static id = 'noFields'
     }
-    expect(() => normie(defineStore, [NoFields])).toThrowError()
+    expect(() => normie(defineStore, [NoFields])).toThrowError(InvalidEntityError)
   })
 
   it('cannot link to a nonexistent entity in a foreign key', () => {
@@ -66,7 +67,7 @@ describe('entities', () => {
         zoneId: this.foreignKey('zones')
       }
     }
-    expect(() => normie(defineStore, [InvalidForeignKey])).toThrowError()
+    expect(() => normie(defineStore, [InvalidForeignKey])).toThrowError(InvalidEntityError)
   })
 
   it('cannot link to a nonexistent entity in a relation', () => {
@@ -76,7 +77,7 @@ describe('entities', () => {
         children: this.hasMany('child', 'parentId')
       }
     }
-    expect(() => normie(defineStore, [InvalidParent])).toThrowError()
+    expect(() => normie(defineStore, [InvalidParent])).toThrowError(InvalidEntityError)
   })
 
   it('cannot link to a nonexistent foreign key in a relation', () => {
@@ -92,7 +93,7 @@ describe('entities', () => {
         parentId: 'not a foreign key'
       }
     }
-    expect(() => normie(defineStore, [InvalidParent, InvalidChild])).toThrowError()
+    expect(() => normie(defineStore, [InvalidParent, InvalidChild])).toThrowError(InvalidForeignKeyError)
   })
 
   it('calls onCreate', () => {

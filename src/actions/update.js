@@ -1,12 +1,13 @@
 import _ from 'lodash'
+import { InvalidUpdateError, DoesNotExistError } from '../exceptions'
 
 export default function (Entity, id, patch) {
   if (patch.id) {
-    throw new Error("cannot change an instance's id")
+    throw new InvalidUpdateError("cannot change an instance's id")
   }
   const data = Entity.dataById[id]
   if (!data) {
-    throw new Error(`cannot set property; id ${id} does not exist in ${Entity.id}`)
+    throw new DoesNotExistError(`cannot set property; id ${id} does not exist in ${Entity.id}`)
   }
   Entity.foreignKeys.forEach(({ fieldname, required, RelatedEntity }) => {
     const prevForeignKey = data[fieldname]
@@ -14,7 +15,7 @@ export default function (Entity, id, patch) {
     // if foreign key has changed
     if (newForeignKey !== undefined && prevForeignKey !== newForeignKey) {
       if (!RelatedEntity.dataById[newForeignKey] && required) {
-        throw new Error(`${fieldname} of value ${newForeignKey} does not exist in ${RelatedEntity.id}`)
+        throw new DoesNotExistError(`${fieldname} of value ${newForeignKey} does not exist in ${RelatedEntity.id}`)
       }
       // disassociate from the old foreign key
       _.remove(

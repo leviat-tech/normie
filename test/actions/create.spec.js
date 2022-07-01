@@ -3,6 +3,7 @@ import { defineStore, setActivePinia, createPinia } from 'pinia'
 import { watch, nextTick } from 'vue'
 import { Zone, Assembly, Segment, Section } from '../entities'
 import { normie } from '../../src/normie'
+import { InvalidCreateError } from '../../src/exceptions'
 
 describe('create', () => {
   beforeEach(() => {
@@ -27,6 +28,6 @@ describe('create', () => {
     const assembly = Assembly.create()
     expect(() => {
       Assembly.create({ id: assembly.id })
-    }).toThrowError()
+    }).toThrowError(InvalidCreateError)
   })
 })

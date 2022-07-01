@@ -2,6 +2,7 @@ import { beforeEach, describe, it, expect } from 'vitest'
 import { defineStore, setActivePinia, createPinia } from 'pinia'
 import { normie } from '../src/normie'
 import Entity from '../src/entity'
+import { InvalidForeignKeyError, DoesNotExistError } from '../src/exceptions'
 
 class Parent extends Entity {
   static id = 'parent'
@@ -23,7 +24,7 @@ describe('foreign key validations', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     normie(defineStore, [Parent, Child])
-    parent = Parent.create({ child: {} })
+    parent = Parent.create({ children: [{}] })
     child = Child.read()[0]
   })
 
@@ -33,10 +34,10 @@ describe('foreign key validations', () => {
   })
 
   it('cannot assign a nonexistent id to a foreign key on create', () => {
-    expect(() => Child.create({ parentId: 'uh oh' })).toThrowError()
+    expect(() => Child.create({ parentId: 'uh oh' })).toThrowError(DoesNotExistError)
   })
 
-  it('cannot assign a nonexistent id to a foreign key on create', () => {
-    expect(() => child.parentId = 'ahh!').toThrowError()
+  it('cannot assign a nonexistent id to a foreign key on update', () => {
+    expect(() => child.parentId = 'ahh!').toThrowError(DoesNotExistError)
   })
 })
