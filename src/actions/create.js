@@ -3,6 +3,11 @@ import { v4 as uuidv4 } from 'uuid'
 import { CreateError, DoesNotExistError } from '../exceptions'
 
 export default function create (Entity, json) {
+  _.keys(json).forEach(key => {
+    if (Entity.fields[key] === undefined && Entity.foreignKeysByFieldName[key] === undefined && key !== 'id') {
+      console.warn(`field ${key} not defined in ${Entity.id}`)
+    }
+  })
   const id = json.id || uuidv4()
   const relationFieldNames = Object.keys(Entity.relationsByFieldName)
   const nullForeignKeys = _.mapValues(Entity.foreignKeysByFieldName, () => null)
@@ -22,18 +27,14 @@ export default function create (Entity, json) {
       relation.onCreateWithRelated(data, related)
     }
   })
-  Entity.foreignKeys.forEach(({ fieldname, required, RelatedEntity }) => {
+  Entity.foreignKeys.forEach(({ fieldname, RelatedEntity }) => {
     const foreignKey = data[fieldname]
     if (foreignKey) {
-      if (!RelatedEntity.dataById[foreignKey] && required) {
+      if (!RelatedEntity.dataById[foreignKey]) {
         throw new DoesNotExistError(`${fieldname} of value ${foreignKey} does not exist in ${RelatedEntity.id}`)
       }
       Entity.idsByForeignKey[fieldname][foreignKey] ??= []
       Entity.idsByForeignKey[fieldname][foreignKey].push(data.id)
-    } else {
-      if (required) {
-        throw new CreateError(`foreign key ${fieldname} on ${Entity.name} is required`)
-      }
     }
   })
   Entity.dataById[id] = data

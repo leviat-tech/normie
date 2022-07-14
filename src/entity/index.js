@@ -1,17 +1,18 @@
 import { reactive } from '@vue/reactivity'
 import _ from 'lodash'
+import fp from 'lodash/fp'
 import { HasOne, HasMany, BelongsTo, ManyToMany } from '../relations'
-import entityProxy from './entity-proxy'
+import proxy from './proxy'
 import serialize from './serialize'
 
 export default class Entity {
   constructor (props) {
     this.data = reactive(props)
-    return new Proxy(this, entityProxy)
+    return new Proxy(this, proxy)
   }
 
-  static setStore (store) {
-    this.store = store
+  static get store () {
+    return this.useStore()
   }
 
   static initialize () {
@@ -70,7 +71,8 @@ export default class Entity {
   }
 
   static find (id) {
-    return new this(this.dataById[id])
+    const data = this.dataById[id]
+    return data && new this(data)
   }
 
   static create (data = {}) {
@@ -78,7 +80,7 @@ export default class Entity {
   }
 
   static read () {
-    return Object.values(this.dataById).map((data) => new this(data))
+    return _.values(this.dataById).map((data) => new this(data))
   }
 
   static update (id, patch) {
@@ -89,8 +91,13 @@ export default class Entity {
     return this.store.delete(this, id)
   }
 
-  static clearForeignKeyIndex (foreignKeyField, foreignKey) {
-    return this.store.clearForeignKeyIndex(this, foreignKeyField, foreignKey)
+  static whereForeignKey (foreignKeyField, foreignKey) {
+    const idsByForeignKey = this.idsByForeignKey[foreignKeyField][foreignKey]
+    return fp.flow(
+      fp.pick(idsByForeignKey),
+      fp.values(),
+      fp.map(data => new this(data))
+    )(this.dataById)
   }
 
   $update (patch) {
@@ -107,7 +114,7 @@ export default class Entity {
 
   // RELATION STUFF
   static foreignKey (RelatedEntity, opts = {}) {
-    return { RelatedEntity, required: opts.required, isForeignKey: true }
+    return { RelatedEntity, isForeignKey: true, ...opts }
   }
 
   static belongsTo (RelatedEntity, foreignKeyField) {
@@ -137,11 +144,11 @@ export default class Entity {
     }
   }
 
-  static manyToMany (RelatedEntity, pivotEntity, primaryForeignKeyField, relatedForeignKeyField) {
+  static manyToMany (RelatedEntity, PivotEntity, primaryForeignKeyField, relatedForeignKeyField) {
     return {
       PrimaryEntity: this,
       RelatedEntity,
-      pivotEntity,
+      PivotEntity,
       primaryForeignKeyField,
       relatedForeignKeyField,
       RelationClass: ManyToMany

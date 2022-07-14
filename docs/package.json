@@ -1,0 +1,19 @@
+{
+  "name": "normie",
+  "version": "0.0.1",
+  "description": "client side state normalization for pinia",
+  "main": "index.js",
+  "authors": {
+    "name": "",
+    "email": ""
+  },
+  "repository": "https://github.com/leviat-tech/normie/normie",
+  "scripts": {
+    "dev": "vuepress dev src",
+    "build": "vuepress build src"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "vuepress": "^1.5.3"
+  }
+}

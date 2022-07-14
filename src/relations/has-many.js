@@ -38,13 +38,13 @@ export default class HasMany extends Relation {
     ) {
       throw new UpdateError(`${this.fieldname} requires an array of ${this.RelatedEntity.name}`)
     }
-    const { required } = this.foreignKey
+    const { onDeleteCascade } = this.foreignKey
     const existingIds = new Set(this.RelatedEntity.idsByForeignKey[this.foreignKeyField][instance.id])
     const newIds = new Set(value.map(({ id }) => id))
 
     existingIds.forEach((existingId) => {
       if (!newIds.has(existingId)) {
-        if (required) {
+        if (onDeleteCascade) {
           this.RelatedEntity.delete(existingId)
         } else {
           this.RelatedEntity.update(existingId, { [this.foreignKeyField]: null })

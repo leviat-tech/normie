@@ -13,7 +13,7 @@ class Parent extends Entity {
 class Child extends Entity {
   static id = 'child'
   static fields = {
-    parentId: this.foreignKey('parent', { required: true }),
+    parentId: this.foreignKey('parent', { onDeleteCascade: true }),
     parent: this.belongsTo('parent', 'parentId')
   }
 }
@@ -28,7 +28,7 @@ describe('foreign key validations', () => {
     child = Child.read()[0]
   })
 
-  it('cascades deletion if a foreign key is required', () => {
+  it('cascades deletion if a foreign key is onDeleteCascade', () => {
     parent.$delete()
     expect(Child.read().length).toBe(0)
   })

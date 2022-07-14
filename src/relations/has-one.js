@@ -30,11 +30,11 @@ export default class HasOne extends Relation {
     if (!(value instanceof this.RelatedEntity) && value !== null) {
       throw new UpdateError(`must set ${this.fieldname} to instance of ${this.RelatedEntity.name}`)
     }
-    const { required } = this.foreignKey
+    const { onDeleteCascade } = this.foreignKey
     const existingId = this.RelatedEntity.idsByForeignKey[this.foreignKeyField][instance.id]?.[0]
 
     if (existingId && existingId !== value?.id) {
-      if (required) {
+      if (onDeleteCascade) {
         this.RelatedEntity.delete(existingId)
       } else {
         this.RelatedEntity.update(existingId, { [this.foreignKeyField]: null })

@@ -24,20 +24,20 @@ export default function normie (defineStore, EntityClasses) {
 
   const entitiesById = _.mapValues(_.groupBy(EntityClasses, 'id'), _.first)
 
-  function getRelatedEntity (_RelatedEntity) {
-    let RelatedEntity = _RelatedEntity
-    if (typeof _RelatedEntity === 'string') {
-      RelatedEntity = entitiesById[_RelatedEntity]
-      if (!RelatedEntity) {
-        throw new InvalidEntityError(`entity ${_RelatedEntity} has not been initialized`)
+  function getEntity (_Entity) {
+    let Entity = _Entity
+    if (typeof _Entity === 'string') {
+      Entity = entitiesById[_Entity]
+      if (!Entity) {
+        throw new InvalidEntityError(`entity ${_Entity} has not been initialized`)
       }
     } else {
-      validateEntity(RelatedEntity)
-      if (!entitiesById[RelatedEntity.id]) {
-        throw new InvalidEntityError(`entity ${_RelatedEntity.name} has not been initialized`)
+      validateEntity(Entity)
+      if (!entitiesById[Entity.id]) {
+        throw new InvalidEntityError(`entity ${_Entity.name} has not been initialized`)
       }
     }
-    return RelatedEntity
+    return Entity
   }
 
   EntityClasses.forEach((EntityClass) => {
@@ -45,7 +45,7 @@ export default function normie (defineStore, EntityClasses) {
     Object.entries(EntityClass.fields)
       .filter(([, field]) => field?.isForeignKey)
       .forEach(([fieldname, { isForeignKey, ...foreignKey }]) => {
-        const RelatedEntity = getRelatedEntity(foreignKey.RelatedEntity)
+        const RelatedEntity = getEntity(foreignKey.RelatedEntity)
         EntityClass.addForeignKey({ ...foreignKey, RelatedEntity, fieldname })
       })
 
@@ -54,7 +54,7 @@ export default function normie (defineStore, EntityClasses) {
       .filter(({ foreignKeyField }) => EntityClass.fields[foreignKeyField] === undefined)
       .forEach((belongsTo) => {
         const { foreignKeyField: fieldname, foreignKeyOpts: opts = {} } = belongsTo
-        const RelatedEntity = getRelatedEntity(belongsTo.RelatedEntity)
+        const RelatedEntity = getEntity(belongsTo.RelatedEntity)
         EntityClass.addForeignKey({ RelatedEntity, fieldname, opts })
       })
   })
@@ -64,8 +64,8 @@ export default function normie (defineStore, EntityClasses) {
     const relations = Object.entries(EntityClass.fields)
       .filter(([, field]) => field?.RelationClass)
       .map(([fieldname, { RelationClass, ...props }]) => {
-        const RelatedEntity = getRelatedEntity(props.RelatedEntity)
-        return new RelationClass({ ...props, RelatedEntity, fieldname })
+        const _props = _.mapValues(props, (v, k) => k.includes('Entity') ? getEntity(v) : v)
+        return new RelationClass({ ..._props, fieldname })
       })
 
     relations.forEach((relation) => {
@@ -91,8 +91,11 @@ export default function normie (defineStore, EntityClasses) {
     actions: { create, update, delete: _delete }
   }
 
-  const useEntityClassesStore = defineStore('entities', storeDefinition)
-  const entitiesStore = useEntityClassesStore()
+  const useEntitiesStore = defineStore('entities', storeDefinition)
 
-  EntityClasses.forEach((EntityClass) => EntityClass.setStore(entitiesStore))
+  EntityClasses.forEach((EntityClass) => {
+    EntityClass.useStore = useEntitiesStore
+  })
+
+  return useEntitiesStore
 }
