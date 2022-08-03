@@ -7,7 +7,8 @@ export default {
       return Reflect.get(...arguments)
     }
     if (prop === '_data') {
-      return target.data
+      // target.data is also a proxy - this converts it into an object
+      return JSON.parse(JSON.stringify(target.data))
     }
     const relation = EntityClass.relationsByFieldName[prop]
     if (relation?.get) {
