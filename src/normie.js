@@ -88,7 +88,10 @@ export default function normie (defineStore, EntityClasses) {
 
   const storeDefinition = {
     state: () => initialState,
-    actions: { create, update, delete: _delete }
+    actions: { create, update, delete: _delete },
+    getters: {
+      models: EntityClasses.reduce((models, EntityClass) => ({ ...models, [EntityClass.id]: EntityClass }), {})
+    }
   }
 
   const useEntitiesStore = defineStore('entities', storeDefinition)
