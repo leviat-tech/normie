@@ -90,7 +90,7 @@ export default function normie (defineStore, EntityClasses) {
     state: () => initialState,
     actions: { create, update, delete: _delete },
     getters: {
-      models: EntityClasses.reduce((models, EntityClass) => ({ ...models, [EntityClass.id]: EntityClass }), {})
+      models: () => entitiesById
     }
   }
 
