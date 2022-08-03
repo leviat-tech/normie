@@ -1,5 +1,5 @@
 {
-  "name": "normie",
+  "name": "@crhio/normie.docs",
   "version": "0.0.1",
   "description": "client side state normalization for pinia",
   "main": "index.js",

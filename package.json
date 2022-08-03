@@ -1,6 +1,6 @@
 {
-  "name": "normie",
-  "version": "0.0.0",
+  "name": "@crhio/normie",
+  "version": "0.0.1",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
