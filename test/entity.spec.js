@@ -86,20 +86,35 @@ describe('entities', () => {
     expect(E.created).toBe(true)
   })
 
-  it('calls onUpdate', () => {
+  it('calls beforeUpdate', () => {
     class E extends Entity {
       static id = 'e'
-      static fields = { field: 'value' }
-      static updated = false
-      static onCreate (instance) {
-        this.updated = true
+      static fields = { field: 'value', updated: false }
+      static beforeUpdate (data) {
+        return { ...data, updated: true }
       }
     }
 
     normie(defineStore, [E])
     const instance = E.create()
     instance.field = 'other value'
-    expect(E.updated).toBe(true)
+    expect(instance.field).toBe('other value')
+    expect(instance.updated).toBe(true)
+  })
+
+  it('calls afterUpdate', () => {
+    class E extends Entity {
+      static id = 'e'
+      static fields = { field: 'value', updated: false }
+      static afterUpdate (instance) {
+        instance.updated = true
+      }
+    }
+
+    normie(defineStore, [E])
+    const instance = E.create()
+    instance.field = 'other value'
+    expect(instance.updated).toBe(true)
   })
 
   it('calls onDelete', () => {
