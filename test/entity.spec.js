@@ -105,16 +105,19 @@ describe('entities', () => {
   it('calls afterUpdate', () => {
     class E extends Entity {
       static id = 'e'
+      static updated = false
       static fields = { field: 'value', updated: false }
       static afterUpdate (instance) {
-        instance.updated = true
+        console.log(instance.id) // TODO: why is this null?
+        this.updated = true
       }
     }
 
     normie(defineStore, [E])
     const instance = E.create()
     instance.field = 'other value'
-    expect(instance.updated).toBe(true)
+    expect(instance.field).toBe('other value')
+    expect(E.updated).toBe(true)
   })
 
   it('calls onDelete', () => {
