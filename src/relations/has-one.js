@@ -1,4 +1,4 @@
-import _ from 'lodash'
+import { isPlainObject } from 'lodash-es'
 import Relation from './relation'
 import BelongsTo from './belongs-to'
 import { CreateError, UpdateError } from '../exceptions'
@@ -20,7 +20,7 @@ export default class HasOne extends Relation {
     if (foreignKey) {
       throw new CreateError(`relation's ${this.foreignKeyField} must be empty; is set to ${foreignKey}`)
     }
-    if (!_.isPlainObject(related)) {
+    if (!isPlainObject(related)) {
       throw new CreateError(`hasOne relation "${this.fieldname}" must be an object`)
     }
     this.RelatedEntity.create({ ...related, [this.foreignKeyField]: data.id })

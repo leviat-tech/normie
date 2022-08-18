@@ -1,4 +1,4 @@
-import _ from 'lodash'
+import { pick, values } from 'lodash-es'
 import Relation from './relation'
 import BelongsTo from './belongs-to'
 
@@ -7,10 +7,10 @@ export default class ManyToMany extends Relation {
     const pivotDataById = this.PivotEntity.dataById
     const pivotIdsByForeignKey = this.PivotEntity.idsByForeignKey
     const pivotIds = pivotIdsByForeignKey[this.primaryForeignKeyField][instance.id]
-    const pivotData = _.pick(pivotDataById, pivotIds)
-    const relatedIds = _.values(pivotData).map((data) => data[this.relatedForeignKeyField])
-    const relatedData = _.pick(this.RelatedEntity.dataById, relatedIds)
-    return _.values(relatedData).map((data) => new this.RelatedEntity(data))
+    const pivotData = pick(pivotDataById, pivotIds)
+    const relatedIds = values(pivotData).map((data) => data[this.relatedForeignKeyField])
+    const relatedData = pick(this.RelatedEntity.dataById, relatedIds)
+    return values(relatedData).map((data) => new this.RelatedEntity(data))
   }
 
   expand () {

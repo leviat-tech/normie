@@ -1,4 +1,4 @@
-import _ from 'lodash'
+import { isPlainObject } from 'lodash-es'
 import fp from 'lodash/fp'
 import Relation from './relation'
 import BelongsTo from './belongs-to'
@@ -19,7 +19,7 @@ export default class HasMany extends Relation {
   }
 
   onCreateWithRelated (data, related) {
-    if (!Array.isArray(related) || related.find((_related) => !_.isPlainObject(_related))) {
+    if (!Array.isArray(related) || related.find((_related) => !isPlainObject(_related))) {
       throw new CreateError(`hasMany relation "${this.fieldname}" must be an array of objects`)
     }
     related.forEach((_related) => {

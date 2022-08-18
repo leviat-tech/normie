@@ -1,6 +1,6 @@
 {
   "name": "normie",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -12,6 +12,7 @@
   "dependencies": {
     "@vue/reactivity": "^3.2.37",
     "lodash": "^4.17.21",
+    "lodash-es": "^4.17.21",
     "uuid": "^8.3.2"
   },
   "devDependencies": {
@@ -26,7 +27,9 @@
     "vitest": "^0.9.3",
     "vue": "^3.2.37"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "main": "./dist/normie.umd.js",
   "module": "./dist/normie.es.js",
   "exports": {

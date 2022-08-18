@@ -1,4 +1,4 @@
-import _ from 'lodash'
+import { isPlainObject } from 'lodash-es'
 import { SerializationError } from '../exceptions'
 
 export default function serialize (instance, path, context) {
@@ -31,7 +31,7 @@ export default function serialize (instance, path, context) {
 
   const serialized = format?.(instance._data, context) || instance._data
 
-  if (serialized && !_.isPlainObject(serialized)) {
+  if (serialized && !isPlainObject(serialized)) {
     throw new SerializationError(`custom serializer of ${entityId} must return an object`)
   }
 
