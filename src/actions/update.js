@@ -36,8 +36,8 @@ export default function (Entity, id, patch) {
 
   const relationFieldNames = _.keys(Entity.relationsByFieldName)
   const modifiedData = Entity.beforeUpdate?.(patch) || patch
-  const newData = _.merge(modifiedData, _.omit(patch, relationFieldNames))
-  const instance = new Entity(newData)
+  _.merge(data, modifiedData, _.omit(patch, relationFieldNames))
+  const instance = new Entity(data)
   Entity.afterUpdate?.(instance)
   return instance
 }
