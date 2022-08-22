@@ -18,7 +18,12 @@
 Normie exposes the following lifecycle hooks:
 
 - `onCreate(instance)`
-- `onUpdate(instance)`
+- `beforeUpdate(instance)`
+- `afterUpdate(instance)`
 - `onDelete(instance)`
 
-These can be defined in any class that extends Normie's `Entity`, and they're called _after_ creating, updating, or deleting the corresponding instance.
+These can be defined in any class that extends Normie's `Entity`, and (with the exception of `beforeUpdate`) they're called _after_ creating, updating, or deleting the corresponding instance.
+
+**Please note**
+
+Updating the instance in the `afterUpdate` hook results in an infinite loop due to the hook being constantly retriggered. Any changes to the instance itself should be done in the `beforeUpdate` handler.
