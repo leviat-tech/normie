@@ -108,7 +108,6 @@ describe('entities', () => {
       static updated = false
       static fields = { field: 'value', updated: false }
       static afterUpdate (instance) {
-        console.log(instance.id) // TODO: why is this null?
         this.updated = true
       }
     }
