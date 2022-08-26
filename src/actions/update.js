@@ -35,8 +35,9 @@ export default function (Entity, id, patch) {
   })
 
   const relationFieldNames = keys(Entity.relationsByFieldName)
-  const newData = merge(data, omit(patch, relationFieldNames))
-  const instance = new Entity(newData)
-  Entity?.onUpdate?.(instance)
+  const modifiedData = Entity.beforeUpdate?.(patch) || patch
+  merge(data, modifiedData, omit(patch, relationFieldNames))
+  const instance = new Entity(data)
+  Entity.afterUpdate?.(instance)
   return instance
 }
