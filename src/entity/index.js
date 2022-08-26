@@ -63,10 +63,12 @@ export default class Entity {
   }
 
   static get dataById () {
+    if (!this.useStore) return {}
     return this.store[this.id].dataById
   }
 
   static get idsByForeignKey () {
+    if (!this.useStore) return {}
     return this.store[this.id].idsByForeignKey
   }
 
@@ -92,6 +94,7 @@ export default class Entity {
   }
 
   static whereForeignKey (foreignKeyField, foreignKey) {
+    if (!this.useStore) return []
     const idsByForeignKey = this.idsByForeignKey[foreignKeyField][foreignKey]
     return fp.flow(
       fp.pick(idsByForeignKey),
