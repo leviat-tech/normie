@@ -3,9 +3,9 @@ import {
   values,
   mapValues,
   groupBy,
-  first
+  first,
+  chain
 } from 'lodash-es'
-import fp from 'lodash/fp'
 import { HasOne, HasMany, BelongsTo, ManyToMany } from '../relations'
 import proxy from './proxy'
 import serialize from './serialize'
@@ -101,11 +101,11 @@ export default class Entity {
   static whereForeignKey (foreignKeyField, foreignKey) {
     if (!this.useStore) return []
     const idsByForeignKey = this.idsByForeignKey[foreignKeyField][foreignKey]
-    return fp.flow(
-      fp.pick(idsByForeignKey),
-      fp.values(),
-      fp.map(data => new this(data))
-    )(this.dataById)
+    return chain(this.dataById)
+      .pick(idsByForeignKey)
+      .values()
+      .map(data => new this(data))
+      .value()
   }
 
   $update (patch) {
