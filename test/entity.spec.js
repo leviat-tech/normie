@@ -74,7 +74,10 @@ describe('entities', () => {
   it('calls onCreate', () => {
     class E extends Entity {
       static id = 'e'
-      static fields = {}
+      static fields = {
+        test: this.read()
+      }
+
       static created = false
       static onCreate (instance) {
         this.created = true
