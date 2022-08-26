@@ -1,4 +1,9 @@
-import _ from 'lodash'
+import {
+  isPlainObject,
+    mapValues,
+    groupBy,
+    first
+} from 'lodash-es'
 import Entity from './entity'
 import { create, update, _delete } from './actions'
 import { BelongsTo } from './relations'
@@ -8,7 +13,7 @@ function validateEntity (EntityClass) {
   if (typeof EntityClass.id !== 'string') {
     throw new InvalidEntityError(`entity class ${EntityClass.name} must have id defined as a string`)
   }
-  if (!_.isPlainObject(EntityClass.fields)) {
+  if (!isPlainObject(EntityClass.fields)) {
     throw new InvalidEntityError(`entity class "${EntityClass.name}" must have fields defined as an object`)
   }
   if (!(EntityClass.prototype instanceof Entity)) {
@@ -22,7 +27,7 @@ export default function normie (defineStore, EntityClasses) {
     EntityClass.initialize()
   })
 
-  const entitiesById = _.mapValues(_.groupBy(EntityClasses, 'id'), _.first)
+  const entitiesById = mapValues(groupBy(EntityClasses, 'id'), first)
 
   function getEntity (_Entity) {
     let Entity = _Entity
@@ -64,7 +69,7 @@ export default function normie (defineStore, EntityClasses) {
     const relations = Object.entries(EntityClass.fields)
       .filter(([, field]) => field?.RelationClass)
       .map(([fieldname, { RelationClass, ...props }]) => {
-        const _props = _.mapValues(props, (v, k) => k.includes('Entity') ? getEntity(v) : v)
+        const _props = mapValues(props, (v, k) => k.includes('Entity') ? getEntity(v) : v)
         return new RelationClass({ ..._props, fieldname })
       })
 
@@ -81,10 +86,10 @@ export default function normie (defineStore, EntityClasses) {
   // STORE STUFF;
   const getInitialEntityState = (EntityClass) => ({
     dataById: {},
-    idsByForeignKey: _.mapValues((EntityClass.foreignKeysByFieldName), () => ({}))
+    idsByForeignKey: mapValues((EntityClass.foreignKeysByFieldName), () => ({}))
   })
 
-  const initialState = _.mapValues(entitiesById, getInitialEntityState)
+  const initialState = mapValues(entitiesById, getInitialEntityState)
 
   const storeDefinition = {
     state: () => initialState,

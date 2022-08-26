@@ -1,4 +1,4 @@
-import _ from 'lodash'
+import { remove } from 'lodash-es'
 
 export default function (Entity, id) {
   Entity.dependentBelongsToRelations.forEach((belongsTo) => {
@@ -18,7 +18,7 @@ export default function (Entity, id) {
   const data = Entity.dataById[id]
   // remove this id from all foreign key indexes;
   Entity.foreignKeys.forEach(({ fieldname }) => {
-    _.remove(
+    remove(
       Entity.idsByForeignKey[fieldname][data[fieldname]],
       (_id) => _id === id
     )

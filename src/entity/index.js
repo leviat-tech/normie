@@ -1,5 +1,10 @@
 import { reactive } from '@vue/reactivity'
-import _ from 'lodash'
+import {
+  values,
+  mapValues,
+  groupBy,
+  first
+} from 'lodash-es'
 import fp from 'lodash/fp'
 import { HasOne, HasMany, BelongsTo, ManyToMany } from '../relations'
 import proxy from './proxy'
@@ -55,11 +60,11 @@ export default class Entity {
   }
 
   static get relationsByFieldName () {
-    return _.mapValues(_.groupBy(this.relations, 'fieldname'), _.first)
+    return mapValues(groupBy(this.relations, 'fieldname'), first)
   }
 
   static get foreignKeysByFieldName () {
-    return _.mapValues(_.groupBy(this.foreignKeys, 'fieldname'), _.first)
+    return mapValues(groupBy(this.foreignKeys, 'fieldname'), first)
   }
 
   static get dataById () {
@@ -82,7 +87,7 @@ export default class Entity {
   }
 
   static read () {
-    return _.values(this.dataById).map((data) => new this(data))
+    return values(this.dataById).map((data) => new this(data))
   }
 
   static update (id, patch) {

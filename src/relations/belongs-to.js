@@ -1,4 +1,4 @@
-import _ from 'lodash'
+import { isPlainObject } from 'lodash-es'
 import Relation from './relation'
 import { InvalidForeignKeyError, CreateError, UpdateError } from '../exceptions'
 
@@ -27,7 +27,7 @@ export default class BelongsTo extends Relation {
     if (data[this.foreignKeyField]) {
       throw new CreateError(`cannot create relation when data has existing foreign key ${this.foreignKeyField}`)
     }
-    if (!_.isPlainObject(related)) {
+    if (!isPlainObject(related)) {
       throw new CreateError(`belongsTo relation "${this.fieldname}" must be an object`)
     }
     const { id } = this.RelatedEntity.create(related)

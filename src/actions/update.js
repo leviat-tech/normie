@@ -1,8 +1,8 @@
-import _ from 'lodash'
+import { keys, remove, merge, omit } from 'lodash-es'
 import { UpdateError, DoesNotExistError } from '../exceptions'
 
 export default function (Entity, id, patch) {
-  _.keys(patch).forEach(key => {
+  keys(patch).forEach(key => {
     if (Entity.fields[key] === undefined && Entity.foreignKeysByFieldName[key] === undefined && key !== 'id') {
       console.warn(`field ${key} not defined in ${Entity.id}`)
     }
@@ -23,7 +23,7 @@ export default function (Entity, id, patch) {
         throw new DoesNotExistError(`${fieldname} of value ${newForeignKey} does not exist in ${RelatedEntity.id}`)
       }
       // disassociate from the old foreign key
-      _.remove(
+      remove(
         Entity.idsByForeignKey[fieldname][prevForeignKey],
         (_id) => _id === id
       )
@@ -34,9 +34,9 @@ export default function (Entity, id, patch) {
     }
   })
 
-  const relationFieldNames = _.keys(Entity.relationsByFieldName)
+  const relationFieldNames = keys(Entity.relationsByFieldName)
   const modifiedData = Entity.beforeUpdate?.(patch) || patch
-  _.merge(data, modifiedData, _.omit(patch, relationFieldNames))
+  merge(data, modifiedData, omit(patch, relationFieldNames))
   const instance = new Entity(data)
   Entity.afterUpdate?.(instance)
   return instance
