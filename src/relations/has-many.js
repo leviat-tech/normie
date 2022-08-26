@@ -1,5 +1,4 @@
-import { isPlainObject } from 'lodash-es'
-import fp from 'lodash/fp'
+import { isPlainObject, chain } from 'lodash-es'
 import Relation from './relation'
 import BelongsTo from './belongs-to'
 import { CreateError, UpdateError } from '../exceptions'
@@ -11,11 +10,11 @@ export default class HasMany extends Relation {
 
   get (instance) {
     const ids = this.RelatedEntity.idsByForeignKey[this.foreignKeyField][instance.id]
-    return fp.flow(
-      fp.pick(ids),
-      fp.values(),
-      fp.map((data) => new this.RelatedEntity(data))
-    )(this.RelatedEntity.dataById)
+    return chain(this.RelatedEntity.dataById)
+      .pick(ids)
+      .values()
+      .map(data => new this.RelatedEntity(data))
+      .value()
   }
 
   onCreateWithRelated (data, related) {
