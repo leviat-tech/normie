@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.2](https://github.com/leviat-tech/normie/compare/v0.0.1...v0.0.2) (2022-08-28)
+
+
+### Features
+
+* add standard version for releases ([f56ef6f](https://github.com/leviat-tech/normie/commit/f56ef6f287d2af0f140354b8c2bc388a340fd6b5))
+
+
+### Bug Fixes
+
+* prevent error when fields() reads from store ([69d8e55](https://github.com/leviat-tech/normie/commit/69d8e55ee3c6b5f37dd45bc069d9d4ee32e77975))
+
 ### 0.0.1 (2022-08-23)
 
 
