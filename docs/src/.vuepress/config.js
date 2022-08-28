@@ -1,5 +1,3 @@
-const { description } = require('../../package')
-
 module.exports = {
   /**
    * Ref：https://v1.vuepress.vuejs.org/config/#title
@@ -8,7 +6,7 @@ module.exports = {
   /**
    * Ref：https://v1.vuepress.vuejs.org/config/#description
    */
-  description: description,
+  description: 'Client side state normalization for pinia',
 
   /**
    * Extra tags to be injected to the page HTML `<head>`
@@ -30,16 +28,12 @@ module.exports = {
     repo: '',
     editLinks: false,
     docsDir: '',
-    editLinkText: '',
+    editLinkText: 'Get started',
     lastUpdated: false,
     nav: [
       {
         text: 'Guide',
         link: '/guide/',
-      },
-      {
-        text: 'API Reference',
-        link: '/config/'
       },
     ],
     sidebar: {
