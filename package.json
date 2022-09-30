@@ -8,7 +8,7 @@
     "test:unit": "vitest run",
     "test:watch": "vitest dev",
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs --fix --ignore-path .gitignore",
-    "release": "standard-version"
+    "release": "standard-version && vite build"
   },
   "dependencies": {
     "@vue/reactivity": "^3.2.37",
