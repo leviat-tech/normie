@@ -125,12 +125,13 @@ export default class Entity {
     return { RelatedEntity, isForeignKey: true, ...opts }
   }
 
-  static belongsTo (RelatedEntity, foreignKeyField) {
+  static belongsTo (RelatedEntity, foreignKeyField, foreignKeyOpts) {
     return {
       PrimaryEntity: this,
       RelatedEntity,
       foreignKeyField,
-      RelationClass: BelongsTo
+      RelationClass: BelongsTo,
+      foreignKeyOpts
     }
   }
 

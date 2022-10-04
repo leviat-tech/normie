@@ -1,8 +1,8 @@
 import {
   isPlainObject,
-    mapValues,
-    groupBy,
-    first
+  mapValues,
+  groupBy,
+  first
 } from 'lodash-es'
 import Entity from './entity'
 import { create, update, _delete } from './actions'
@@ -58,9 +58,9 @@ export default function normie (defineStore, EntityClasses) {
       .filter((field) => field?.RelationClass === BelongsTo)
       .filter(({ foreignKeyField }) => EntityClass.fields[foreignKeyField] === undefined)
       .forEach((belongsTo) => {
-        const { foreignKeyField: fieldname, foreignKeyOpts: opts = {} } = belongsTo
+        const { foreignKeyField: fieldname, foreignKeyOpts } = belongsTo
         const RelatedEntity = getEntity(belongsTo.RelatedEntity)
-        EntityClass.addForeignKey({ RelatedEntity, fieldname, opts })
+        EntityClass.addForeignKey({ RelatedEntity, fieldname, ...foreignKeyOpts })
       })
   })
 
