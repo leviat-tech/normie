@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.1.1](https://github.com/leviat-tech/normie/compare/v1.0.2...v1.1.1) (2022-10-05)
+
+
+### Bug Fixes
+
+* correctly apply foreign key opts when using belongsTo ([#8](https://github.com/leviat-tech/normie/issues/8)) ([9b48031](https://github.com/leviat-tech/normie/commit/9b480312209f441c51d578e5603d51c80eb2f997))
+* ensure all related entities are deleted when cascade enabled ([6750cb2](https://github.com/leviat-tech/normie/commit/6750cb234ba2a73fd5541f18d9489f9cd0216746))
+
 ## 1.1.0 (2022-10-04)
 
 
