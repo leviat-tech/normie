@@ -3,8 +3,12 @@ import { remove } from 'lodash-es'
 export default function (Entity, id) {
   Entity.dependentBelongsToRelations.forEach((belongsTo) => {
     const { foreignKey, foreignKeyField, PrimaryEntity } = belongsTo
+
+    // Create a clone of the ids array to prevent the array from mutation during the iteration
+    const idsToDelete = PrimaryEntity.idsByForeignKey[foreignKeyField][id]?.map(_id => _id)
+
     // disassociate (or delete) all objects related to the deleted instance;
-    PrimaryEntity.idsByForeignKey[foreignKeyField][id]?.forEach?.((_id) => {
+    idsToDelete?.forEach?.((_id) => {
       if (foreignKey.onDeleteCascade) {
         this.delete(PrimaryEntity, _id)
       } else {
