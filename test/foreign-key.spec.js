@@ -10,6 +10,7 @@ class Parent extends Entity {
     children: this.hasMany('child', 'parentId')
   }
 }
+
 class Child extends Entity {
   static id = 'child'
   static fields = {
@@ -44,10 +45,17 @@ describe('foreign key validations', () => {
     parent.$delete()
     expect(Child.read().length).toBe(0)
 
-    const layer1 = Layer.create({})
-    const layer2 = Layer.create({ parentId: layer1.id })
-    layer1.$delete()
-    expect(Layer.find(layer2.id)).toBe(undefined)
+    const parent1 = Layer.create({})
+    const child1 = Layer.create({ parentId: parent1.id })
+    const child2 = Layer.create({ parentId: parent1.id })
+    const child3 = Layer.create({ parentId: parent1.id })
+    const child4 = Layer.create({ parentId: parent1.id })
+    parent1.$delete()
+
+    expect(Layer.find(child1.id)).toBe(undefined)
+    expect(Layer.find(child2.id)).toBe(undefined)
+    expect(Layer.find(child3.id)).toBe(undefined)
+    expect(Layer.find(child4.id)).toBe(undefined)
   })
 
   it('cannot assign a nonexistent id to a foreign key on create', () => {
