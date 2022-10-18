@@ -1,26 +1,30 @@
 import { beforeEach, describe, it, expect } from 'vitest'
 import { defineStore, setActivePinia, createPinia } from 'pinia'
 import { watch, nextTick } from 'vue'
-import { Zone, Assembly, Segment, Section } from '../entities'
+import { Zone, Assembly, Segment, Section, ListTest } from '../entities'
 import normie from '../../src/normie'
 import { UpdateError, DoesNotExistError } from '../../src/exceptions'
 
 describe('update', () => {
   let zone
   let assembly
+  let listTest
 
   beforeEach(() => {
     setActivePinia(createPinia())
-    normie(defineStore, [Zone, Assembly, Segment, Section])
+    normie(defineStore, [Zone, Assembly, Segment, Section, ListTest])
     zone = Zone.create()
     assembly = Assembly.create({ profile: { radius: 0.01 } })
+    listTest = ListTest.create({ list: [1, 2, 3] })
   })
 
   it('can update properties with a setter', () => {
     assembly.zone = zone
     zone.assemblies[0].profile.radius = 0.001
+    listTest.list = [4]
     expect(zone.assemblies[0].profile.radius).toBe(0.001)
     expect(assembly.profile.radius).toBe(0.001)
+    expect(listTest.list).toEqual([4])
   })
 
   it('can update multiple properties with $.update', () => {

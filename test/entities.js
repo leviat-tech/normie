@@ -50,3 +50,10 @@ export class Section extends Entity {
     zones: this.manyToMany(Zone, Segment, 'sectionId', 'zoneId')
   }
 }
+
+export class ListTest extends Entity {
+  static id = 'listTest'
+  static fields = {
+    list: []
+  }
+}
