@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.2.0](https://github.com/leviat-tech/normie/compare/v1.0.2...v1.2.0) (2022-10-18)
+
+
+### Features
+
+* add beforeCreate, afterCreate, beforeDelete and afterDelete entity methods ([26c7b25](https://github.com/leviat-tech/normie/commit/26c7b25ab10a2b6bffc97cdf8b0c91711c36a7c3))
+
+
+### Bug Fixes
+
+* correctly apply foreign key opts when using belongsTo ([#8](https://github.com/leviat-tech/normie/issues/8)) ([9b48031](https://github.com/leviat-tech/normie/commit/9b480312209f441c51d578e5603d51c80eb2f997))
+* ensure all related entities are deleted when cascade enabled ([596406c](https://github.com/leviat-tech/normie/commit/596406c91f7e2b5a4168f285260851271ad9bd13))
+* weird merge behavior with arrays ([23fdd03](https://github.com/leviat-tech/normie/commit/23fdd032d8e897ed685b5645ef4fb05e011c9e12))
+
 ### [1.1.2](https://github.com/leviat-tech/normie/compare/v1.1.0...v1.1.2) (2022-10-18)
 
 
