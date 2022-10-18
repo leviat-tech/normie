@@ -1,4 +1,4 @@
-import { keys, remove, merge, omit } from 'lodash-es'
+import { keys, remove, mergeWith, omit, isArray } from 'lodash-es'
 import { UpdateError, DoesNotExistError } from '../exceptions'
 
 export default function (Entity, id, patch) {
@@ -36,7 +36,11 @@ export default function (Entity, id, patch) {
 
   const relationFieldNames = keys(Entity.relationsByFieldName)
   const modifiedData = Entity.beforeUpdate?.(patch) || patch
-  merge(data, modifiedData, omit(patch, relationFieldNames))
+
+  function customizer (objValue, srcValue) {
+    if (isArray(srcValue)) return srcValue
+  }
+  mergeWith(data, modifiedData, omit(patch, relationFieldNames), customizer)
   const instance = new Entity(data)
   Entity.afterUpdate?.(instance)
   return instance
