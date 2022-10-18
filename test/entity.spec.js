@@ -71,15 +71,35 @@ describe('entities', () => {
     expect(() => normie(defineStore, [Parent, Child])).toThrowError(InvalidForeignKeyError)
   })
 
-  it('calls onCreate', () => {
+  it('calls beforeCreate', () => {
     class E extends Entity {
       static id = 'e'
       static fields = {
-        test: this.read()
+        getSiblings: () => this.read()
       }
 
       static created = false
-      static onCreate (instance) {
+      static beforeCreate (instance) {
+        expect(instance.getSiblings()).toHaveLength(0)
+        this.created = true
+      }
+    }
+
+    normie(defineStore, [E])
+    E.create()
+    expect(E.created).toBe(true)
+  })
+
+  it('calls afterCreate', () => {
+    class E extends Entity {
+      static id = 'e'
+      static fields = {
+        getSiblings: () => this.read()
+      }
+
+      static created = false
+      static afterCreate (instance) {
+        expect(instance.getSiblings()).toHaveLength(1);
         this.created = true
       }
     }
@@ -122,12 +142,34 @@ describe('entities', () => {
     expect(E.updated).toBe(true)
   })
 
-  it('calls onDelete', () => {
+  it('calls beforeDelete', () => {
     class E extends Entity {
       static id = 'e'
-      static fields = {}
+      static fields = {
+        getSiblings: () => this.read()
+      }
       static deleted = false
-      static onDelete (instance) {
+      static beforeDelete (instance) {
+        expect(instance.getSiblings()).toHaveLength(1)
+        this.deleted = true
+      }
+    }
+
+    normie(defineStore, [E])
+    const instance = E.create()
+    instance.$delete()
+    expect(E.deleted).toBe(true)
+  })
+
+  it('calls afterDelete', () => {
+    class E extends Entity {
+      static id = 'e'
+      static fields = {
+        getSiblings: () => this.read()
+      }
+      static deleted = false
+      static afterDelete (instance) {
+        expect(instance.getSiblings()).toHaveLength(0)
         this.deleted = true
       }
     }
