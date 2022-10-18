@@ -27,7 +27,8 @@ export default function (Entity, id) {
       (_id) => _id === id
     )
   })
-  delete Entity.dataById[id]
   const instance = new Entity(data)
-  Entity?.onDelete?.(instance)
+  Entity.beforeDelete?.(instance)
+  delete Entity.dataById[id]
+  Entity.afterDelete?.(instance)
 }
