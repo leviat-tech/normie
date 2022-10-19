@@ -71,6 +71,24 @@ describe('entities', () => {
     expect(() => normie(defineStore, [Parent, Child])).toThrowError(InvalidForeignKeyError)
   })
 
+  it('ensures nullish values are retrievable from the instance proxy', () => {
+    class EmptyString extends Entity {
+      static id = 'empty-string';
+      static fields = {
+        emptyString: '',
+        nullVal: null,
+        zero: 0,
+      }
+    }
+
+    normie(defineStore, [EmptyString]);
+    const instance = EmptyString.create();
+
+    expect(instance.emptyString).toBe('');
+    expect(instance.nullVal).toBe(null);
+    expect(instance.zero).toBe(0);
+  })
+
   it('calls beforeCreate', () => {
     class E extends Entity {
       static id = 'e'

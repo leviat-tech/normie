@@ -17,7 +17,7 @@ export default {
       }
       return relation.get(target.data)
     }
-    if (target.data[prop]) {
+    if (target.data[prop] !== undefined) {
       return target.data[prop]
     }
     return Reflect.get(...arguments)
