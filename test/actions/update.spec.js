@@ -39,6 +39,11 @@ describe('update', () => {
     expect(assembly.profile.radius).toBe(0.01)
   })
 
+  it('completely replace property upon assigment', () => {
+    assembly.profile = { width: 0.09 }
+    expect(assembly.profile.radius).toBe(undefined)
+  })
+
   it('ensures updating properties is reactive', async () => {
     let changed = 0
     assembly.zone = zone
