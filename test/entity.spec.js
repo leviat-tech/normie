@@ -73,20 +73,20 @@ describe('entities', () => {
 
   it('ensures nullish values are retrievable from the instance proxy', () => {
     class EmptyString extends Entity {
-      static id = 'empty-string';
+      static id = 'empty-string'
       static fields = {
         emptyString: '',
         nullVal: null,
-        zero: 0,
+        zero: 0
       }
     }
 
-    normie(defineStore, [EmptyString]);
-    const instance = EmptyString.create();
+    normie(defineStore, [EmptyString])
+    const instance = EmptyString.create()
 
-    expect(instance.emptyString).toBe('');
-    expect(instance.nullVal).toBe(null);
-    expect(instance.zero).toBe(0);
+    expect(instance.emptyString).toBe('')
+    expect(instance.nullVal).toBe(null)
+    expect(instance.zero).toBe(0)
   })
 
   it('calls beforeCreate', () => {
@@ -117,7 +117,7 @@ describe('entities', () => {
 
       static created = false
       static afterCreate (instance) {
-        expect(instance.getSiblings()).toHaveLength(1);
+        expect(instance.getSiblings()).toHaveLength(1)
         this.created = true
       }
     }
@@ -166,6 +166,7 @@ describe('entities', () => {
       static fields = {
         getSiblings: () => this.read()
       }
+
       static deleted = false
       static beforeDelete (instance) {
         expect(instance.getSiblings()).toHaveLength(1)
@@ -185,6 +186,7 @@ describe('entities', () => {
       static fields = {
         getSiblings: () => this.read()
       }
+
       static deleted = false
       static afterDelete (instance) {
         expect(instance.getSiblings()).toHaveLength(0)

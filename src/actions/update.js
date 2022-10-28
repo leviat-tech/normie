@@ -1,7 +1,7 @@
 import { keys, remove, mergeWith, omit, isArray } from 'lodash-es'
 import { UpdateError, DoesNotExistError } from '../exceptions'
 
-export default function (Entity, id, patch, merge = true) {
+export default function (Entity, id, patch, overwrite) {
   keys(patch).forEach(key => {
     if (Entity.fields[key] === undefined && Entity.foreignKeysByFieldName[key] === undefined && key !== 'id') {
       console.warn(`field ${key} not defined in ${Entity.id}`)
@@ -38,7 +38,10 @@ export default function (Entity, id, patch, merge = true) {
   const modifiedData = Entity.beforeUpdate?.(patch) || patch
 
   function customizer (objValue, srcValue) {
-    if (isArray(srcValue) || !merge) return srcValue
+    const _overwrite = overwrite === undefined
+      ? isArray(srcValue)
+      : overwrite
+    if (_overwrite) return srcValue
   }
   mergeWith(data, modifiedData, omit(patch, relationFieldNames), customizer)
   const instance = new Entity(data)
