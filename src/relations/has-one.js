@@ -42,9 +42,7 @@ export default class HasOne extends Relation {
     }
 
     if (value && value.id !== existingId) {
-      this.RelatedEntity.update(value.id, {
-        [this.foreignKeyField]: instance.id
-      })
+      this.RelatedEntity.update(value.id, { [this.foreignKeyField]: instance.id })
     }
   }
 

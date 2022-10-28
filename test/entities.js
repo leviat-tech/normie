@@ -53,7 +53,13 @@ export class Section extends Entity {
 
 export class ListTest extends Entity {
   static id = 'listTest'
+  static updateCount = 0
+
   static fields = {
     list: []
+  }
+
+  static afterUpdate () {
+    this.updateCount++
   }
 }
