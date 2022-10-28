@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.2.4](https://github.com/leviat-tech/normie/compare/v1.1.0...v1.2.4) (2022-10-28)
+
+
+### Bug Fixes
+
+* allow nested updates to fire update action ([d288df8](https://github.com/leviat-tech/normie/commit/d288df88d63f3d7e0ef84fe511de5da16ecca39d))
+* ensure all related entities are deleted when cascade enabled ([596406c](https://github.com/leviat-tech/normie/commit/596406c91f7e2b5a4168f285260851271ad9bd13))
+* make falsy model properties retrievable ([34d60e5](https://github.com/leviat-tech/normie/commit/34d60e57a818cc378e2b9e6f2d9d589da7df35cf))
+* weird merge behavior with arrays ([23fdd03](https://github.com/leviat-tech/normie/commit/23fdd032d8e897ed685b5645ef4fb05e011c9e12))
+
 ### [1.2.3](https://github.com/leviat-tech/normie/compare/v1.1.0...v1.2.3) (2022-10-28)
 
 
