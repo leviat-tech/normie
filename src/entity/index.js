@@ -90,8 +90,8 @@ export default class Entity {
     return values(this.dataById).map((data) => new this(data))
   }
 
-  static update (id, patch) {
-    return this.store.update(this, id, patch)
+  static update (id, patch, merge) {
+    return this.store.update(this, id, patch, merge)
   }
 
   static delete (id) {

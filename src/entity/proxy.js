@@ -35,7 +35,7 @@ export default {
     if (!EntityClass.fields[prop] === undefined) {
       console.warn(`warning: property ${prop} not defined in ${EntityClass.name} fields`)
     }
-    EntityClass.update(target.data.id, { [prop]: value })
+    EntityClass.update(target.data.id, { [prop]: value }, false)
     return true
   }
 }
