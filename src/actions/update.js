@@ -1,7 +1,7 @@
 import { keys, remove, mergeWith, omit, isArray } from 'lodash-es';
 import { UpdateError, DoesNotExistError } from '../exceptions';
 
-export default function (Entity, id, patch, overwrite) {
+export default function (Entity, id, patch, merge = true) {
   const previousPatchValues = {};
   keys(patch).forEach((key) => {
     if (
@@ -52,9 +52,8 @@ export default function (Entity, id, patch, overwrite) {
   const modifiedData =
     Entity.beforeUpdate?.(patch, id, previousPatchValues) || patch;
 
-  function customizer(objValue, srcValue) {
-    const _overwrite = overwrite === undefined ? isArray(srcValue) : overwrite;
-    if (_overwrite) return srcValue;
+  function customizer (objValue, srcValue) {
+    if (isArray(srcValue) || !merge) return srcValue
   }
   mergeWith(data, modifiedData, omit(patch, relationFieldNames), customizer);
   const instance = new Entity(data);
