@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.3.0](https://github.com/leviat-tech/normie/compare/v1.0.2...v1.3.0) (2023-09-14)
+
+
+### Features
+
+* beforeUpdate includes entity id and prev val ([3a5966c](https://github.com/leviat-tech/normie/commit/3a5966c82073b2c9758397d584d8a4d15c88fd09))
+
+
+### Bug Fixes
+
+* allow nested updates to fire update action ([996a477](https://github.com/leviat-tech/normie/commit/996a4770768638a1b28ecd6927087d3f7d352a1c))
+* correctly apply foreign key opts when using belongsTo ([#8](https://github.com/leviat-tech/normie/issues/8)) ([9b48031](https://github.com/leviat-tech/normie/commit/9b480312209f441c51d578e5603d51c80eb2f997))
+* ensure all related entities are deleted when cascade enabled ([596406c](https://github.com/leviat-tech/normie/commit/596406c91f7e2b5a4168f285260851271ad9bd13))
+* make falsy model properties retrievable ([34d60e5](https://github.com/leviat-tech/normie/commit/34d60e57a818cc378e2b9e6f2d9d589da7df35cf))
+* weird merge behavior with arrays ([23fdd03](https://github.com/leviat-tech/normie/commit/23fdd032d8e897ed685b5645ef4fb05e011c9e12))
+
 ### [1.2.4](https://github.com/leviat-tech/normie/compare/v1.1.0...v1.2.4) (2022-10-28)
 
 
