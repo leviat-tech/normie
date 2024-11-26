@@ -49,6 +49,8 @@ export default function (Entity, id, patch, merge = true) {
 
   const relationFieldNames = keys(Entity.relationsByFieldName);
 
+  Entity.beforeAll?.('update', data)
+
   const modifiedData =
     Entity.beforeUpdate?.(patch, id, previousPatchValues) || patch;
 
@@ -58,5 +60,6 @@ export default function (Entity, id, patch, merge = true) {
   mergeWith(data, modifiedData, omit(patch, relationFieldNames), customizer);
   const instance = new Entity(data);
   Entity.afterUpdate?.(instance);
+  Entity.afterAll?.('update', instance.data);
   return instance;
 }

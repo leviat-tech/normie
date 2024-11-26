@@ -15,14 +15,16 @@ segment.$toJSON('section.[zones.*, presets]');
 
 ## Lifecycle Methods
 
-Normie exposes the following lifecycle hooks, which can be defined in any class that extends Normie's `Entity`:
+Normie exposes the following lifecycle hooks, which can be defined as static methods in any class that extends Normie's `Entity`:
 
 - `beforeCreate(instance)`
-- `beforeCreate(instance)`
+- `afterCreate(instance)`
 - `beforeUpdate(patch, id?, previousData?)`
 - `afterUpdate(instance)`
 - `beforeDelete(instance)`
 - `afterDelete(instance)`
+- `beforeAll(actionType, data)` - called before all create, update and delete actions
+- `afterAll(actionType, data)` - called after all create, update and delete actions
 
 ::: danger Please Note
 Updating the instance in the `afterUpdate` hook results in an infinite loop due to the hook being constantly retriggered. Any changes to the instance itself should be done in the `beforeUpdate` handler.

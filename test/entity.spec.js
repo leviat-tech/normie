@@ -1,4 +1,4 @@
-import { beforeEach, describe, it, expect } from 'vitest'
+import { beforeEach, describe, it, expect, vi } from 'vitest'
 import { defineStore, setActivePinia, createPinia } from 'pinia'
 import normie from '../src/normie'
 import Entity from '../src/entity'
@@ -197,4 +197,56 @@ describe('entities', () => {
     instance.$delete()
     expect(E.deleted).toBe(true)
   })
+
+  it('calls beforeAll before create, update and delete', () => {
+    class E extends Entity {
+      static id = 'e'
+      static fields = {
+        isUpdated: false
+      }
+      static deleted = false
+      static beforeAll () {}
+    }
+
+    const beforeAllSpy = vi.spyOn(E, 'beforeAll')
+
+    normie(defineStore, [E])
+    const instance = E.create()
+    instance.isUpdated = true
+    instance.$delete()
+
+    const instanceData = instance.$toJSON()
+
+    expect(beforeAllSpy).toHaveBeenCalledTimes(3)
+    expect(beforeAllSpy).toHaveBeenNthCalledWith(1, 'create', instanceData)
+    expect(beforeAllSpy).toHaveBeenNthCalledWith(2, 'update', instanceData)
+    expect(beforeAllSpy).toHaveBeenNthCalledWith(3, 'delete', instanceData)
+  })
+
+  it('calls afterAll after create, update and delete', () => {
+    class E extends Entity {
+      static id = 'e'
+      static fields = {
+        isUpdated: false
+      }
+      static afterAll () {}
+    }
+
+    const afterAllSpy = vi.spyOn(E, 'afterAll')
+
+    normie(defineStore, [E])
+    const instance = E.create()
+
+    instance.isUpdated = true
+    instance.$delete()
+
+    const instanceData = instance.$toJSON()
+
+    expect(afterAllSpy).toHaveBeenCalledTimes(3)
+    expect(afterAllSpy).toHaveBeenNthCalledWith(1, 'create', instanceData)
+    expect(afterAllSpy).toHaveBeenNthCalledWith(2, 'update', instanceData)
+    expect(afterAllSpy).toHaveBeenNthCalledWith(3, 'delete', instanceData)
+  })
+
+
 })
