@@ -18,7 +18,8 @@ export default function create (Entity, json) {
     throw new CreateError(`id ${id} already exists in ${Entity.id}`)
   }
 
-  Entity.beforeCreate?.(data);
+  Entity.beforeCreate?.(data)
+  Entity.beforeAll?.('create', data)
 
   // putting data in the store before relations are created will prevent validation errors
   Entity.dataById[id] = data
@@ -44,5 +45,6 @@ export default function create (Entity, json) {
 
   const instance = new Entity(data)
   Entity?.afterCreate?.(instance)
+  Entity.afterAll?.('create', data)
   return instance
 }
