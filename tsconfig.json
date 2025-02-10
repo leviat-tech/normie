@@ -1,0 +1,10 @@
+{
+    "compilerOptions": {
+      "declaration": true,  // Generate .d.ts files
+      "emitDeclarationOnly": true, // Only emit type definitions, no JS files
+      "skipLibCheck": true,
+      "strict": true
+    },
+    "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.vue", "src/index.js", "src/index.js"],
+    "exclude": ["node_modules", "dist"]
+  }

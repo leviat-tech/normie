@@ -11,22 +11,22 @@ import proxy from './proxy'
 import serialize from './serialize'
 
 export default class Entity {
-  constructor (props) {
+  constructor(props) {
     this.data = reactive(props)
     return new Proxy(this, proxy)
   }
 
-  static get store () {
+  static get store() {
     return this.useStore()
   }
 
-  static initialize () {
+  static initialize() {
     this.relations = []
     this.dependentBelongsToRelations = []
     this.foreignKeys = []
   }
 
-  static addBelongsToRelation (relations, relation) {
+  static addBelongsToRelation(relations, relation) {
     // HasOne, HasMany etc create BelongsTo relations so there may be some duplicates
     // prioritize BelongsTo with fieldname
     const identicalBelongsTo = relations.find((_relation) => (_relation instanceof BelongsTo) &&
@@ -42,7 +42,7 @@ export default class Entity {
     }
   }
 
-  static addRelation (relation) {
+  static addRelation(relation) {
     if (relation instanceof BelongsTo) {
       this.addBelongsToRelation(this.relations, relation)
       relation.RelatedEntity.addDependentBelongsToRelation(relation)
@@ -51,54 +51,54 @@ export default class Entity {
     }
   }
 
-  static addDependentBelongsToRelation (belongsTo) {
+  static addDependentBelongsToRelation(belongsTo) {
     this.addBelongsToRelation(this.dependentBelongsToRelations, belongsTo)
   }
 
-  static addForeignKey (foreignKey) {
+  static addForeignKey(foreignKey) {
     this.foreignKeys.push(foreignKey)
   }
 
-  static get relationsByFieldName () {
+  static get relationsByFieldName() {
     return mapValues(groupBy(this.relations, 'fieldname'), first)
   }
 
-  static get foreignKeysByFieldName () {
+  static get foreignKeysByFieldName() {
     return mapValues(groupBy(this.foreignKeys, 'fieldname'), first)
   }
 
-  static get dataById () {
+  static get dataById() {
     if (!this.useStore) return {}
     return this.store[this.id].dataById
   }
 
-  static get idsByForeignKey () {
+  static get idsByForeignKey() {
     if (!this.useStore) return {}
     return this.store[this.id].idsByForeignKey
   }
 
-  static find (id) {
+  static find(id: string): Entity | undefined {
     const data = this.dataById[id]
     return data && new this(data)
   }
 
-  static create (data = {}) {
+  static create(data = {}) {
     return this.store.create(this, data)
   }
 
-  static read () {
+  static read() {
     return values(this.dataById).map((data) => new this(data))
   }
 
-  static update (id, patch, merge) {
+  static update(id, patch, merge) {
     return this.store.update(this, id, patch, merge)
   }
 
-  static delete (id) {
+  static delete(id) {
     return this.store.delete(this, id)
   }
 
-  static whereForeignKey (foreignKeyField, foreignKey) {
+  static whereForeignKey(foreignKeyField, foreignKey) {
     if (!this.useStore) return []
     const idsByForeignKey = this.idsByForeignKey[foreignKeyField][foreignKey]
     return chain(this.dataById)
@@ -108,24 +108,24 @@ export default class Entity {
       .value()
   }
 
-  $update (patch) {
+  $update(patch) {
     return this.constructor.update(this.id, patch)
   }
 
-  $delete () {
+  $delete() {
     return this.constructor.delete(this.id)
   }
 
-  $toJSON (path = '', context = null) {
+  $toJSON(path = '', context = null) {
     return serialize(this, path, context)
   }
 
   // RELATION STUFF
-  static foreignKey (RelatedEntity, opts = {}) {
+  static foreignKey(RelatedEntity, opts = {}) {
     return { RelatedEntity, isForeignKey: true, ...opts }
   }
 
-  static belongsTo (RelatedEntity, foreignKeyField, foreignKeyOpts) {
+  static belongsTo(RelatedEntity, foreignKeyField, foreignKeyOpts) {
     return {
       PrimaryEntity: this,
       RelatedEntity,
@@ -135,7 +135,7 @@ export default class Entity {
     }
   }
 
-  static hasOne (RelatedEntity, foreignKeyField) {
+  static hasOne(RelatedEntity, foreignKeyField) {
     return {
       PrimaryEntity: this,
       RelatedEntity,
@@ -144,7 +144,7 @@ export default class Entity {
     }
   }
 
-  static hasMany (RelatedEntity, foreignKeyField) {
+  static hasMany(RelatedEntity, foreignKeyField) {
     return {
       PrimaryEntity: this,
       RelatedEntity,
@@ -153,7 +153,7 @@ export default class Entity {
     }
   }
 
-  static manyToMany (RelatedEntity, PivotEntity, primaryForeignKeyField, relatedForeignKeyField) {
+  static manyToMany(RelatedEntity, PivotEntity, primaryForeignKeyField, relatedForeignKeyField) {
     return {
       PrimaryEntity: this,
       RelatedEntity,
