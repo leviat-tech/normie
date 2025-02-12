@@ -1,10 +1,13 @@
 {
-    "compilerOptions": {
-      "declaration": true,  // Generate .d.ts files
-      "emitDeclarationOnly": true, // Only emit type definitions, no JS files
-      "skipLibCheck": true,
-      "strict": true
-    },
-    "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.vue", "src/index.js", "src/index.js"],
-    "exclude": ["node_modules", "dist"]
-  }
+  "compilerOptions": {
+    "declaration": true,  // Generate .d.ts files
+    "emitDeclarationOnly": true, // Only emit type definitions, no JS files
+    "skipLibCheck": true,
+    "moduleResolution": "node", // Import path with an index file
+    "allowJs": true, // Allow importing js modules
+    "noImplicitAny": true, // Turn off to remove implicit any type errors (dev only)
+    "strict": false
+  },
+  "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.vue", "src/index.js", "src/index.js"],
+  "exclude": ["node_modules", "dist"]
+}

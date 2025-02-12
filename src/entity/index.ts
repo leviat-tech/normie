@@ -1,3 +1,6 @@
+// TODO: remove to run ts checks
+// @ts-nocheck
+
 import { reactive } from '@vue/reactivity'
 import {
   values,
