@@ -9,7 +9,10 @@ export default class HasMany extends Relation {
   }
 
   get (instance) {
-    const ids = this.RelatedEntity.idsByForeignKey[this.foreignKeyField][instance.id]
+    const ids = this.RelatedEntity.idsByForeignKey[this.foreignKeyField]?.[instance.id]
+
+    if (!ids) return []
+
     return Object.values(pick(this.RelatedEntity.dataById, ids))
       .map(data => new this.RelatedEntity(data))
   }
