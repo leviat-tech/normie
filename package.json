@@ -1,6 +1,6 @@
 {
   "name": "@crhio/normie",
-  "version": "1.3.6",
+  "version": "1.3.7",
   "scripts": {
     "dev:ts": "tsc --watch --noEmit",
     "dev": "vite",
